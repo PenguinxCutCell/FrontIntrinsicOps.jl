@@ -84,19 +84,21 @@ Geometric quantities derived from a `SurfaceMesh{T}`.
 
 Fields
 ------
-- `face_normals   :: Vector{SVector{3,T}}` – outward unit normals per face.
-- `face_areas     :: Vector{T}` – area of each triangle.
-- `edge_lengths   :: Vector{T}` – length of each unique edge (ordered as in
+- `face_normals       :: Vector{SVector{3,T}}` – outward unit normals per face.
+- `face_areas         :: Vector{T}` – area of each triangle.
+- `edge_lengths       :: Vector{T}` – length of each unique edge (ordered as in
   the edge list produced by `topology`).
-- `vertex_dual_areas :: Vector{T}` – barycentric dual area at each vertex
-  (one-third of the sum of areas of adjacent faces).
-- `vertex_normals :: Vector{SVector{3,T}}` – area-weighted vertex normals
+- `vertex_dual_areas  :: Vector{T}` – dual area at each vertex; the formula
+  used depends on `dual_area_method` (`:barycentric` or `:mixed`).
+- `vertex_normals     :: Vector{SVector{3,T}}` – area-weighted vertex normals
   (unit).
 - `mean_curvature_normal :: Vector{SVector{3,T}}` – discrete mean-curvature
   normal vector `Hₙ` at each vertex (populated after calling `curvature`).
-- `mean_curvature :: Vector{T}` – scalar mean curvature `H` at each vertex.
+- `mean_curvature     :: Vector{T}` – scalar mean curvature `H` at each vertex.
 - `gaussian_curvature :: Vector{T}` – angle-defect Gaussian curvature at each
   vertex (optional; empty vector if not computed).
+- `dual_area_method   :: Symbol` – records which dual-area formula was used
+  (`:barycentric` or `:mixed`).
 """
 struct SurfaceGeometry{T<:AbstractFloat}
     face_normals          :: Vector{SVector{3,T}}
@@ -107,6 +109,7 @@ struct SurfaceGeometry{T<:AbstractFloat}
     mean_curvature_normal :: Vector{SVector{3,T}}
     mean_curvature        :: Vector{T}
     gaussian_curvature    :: Vector{T}
+    dual_area_method      :: Symbol
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
