@@ -1,0 +1,257 @@
+# surface_advection_diffusion.jl – Combined scalar advection–diffusion on
+#                                   static surfaces.
+#
+# PDE (strong form):  du/dt + M⁻¹ A u + μ L u = g
+#
+# where A is the "raw" edge-flux transport matrix (M du/dt + A u = 0 form),
+# L = M⁻¹ K is the scalar Laplace–Beltrami, and g is a pointwise source.
+#
+# Time-stepping strategies
+# ------------------------
+# IMEX (implicit-explicit):
+#   - Transport (M⁻¹ A u) treated explicitly.
+#   - Diffusion (μ L u) treated implicitly.
+#   System: (I + dt μ L) uⁿ⁺¹ = uⁿ - dt M⁻¹ A uⁿ + dt g
+#
+# Backward Euler (fully implicit, both terms):
+#   (I + dt M⁻¹ A + dt μ L) uⁿ⁺¹ = uⁿ + dt g
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helper: assemble both operators at once
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    assemble_advection_diffusion_operators(mesh, geom, dec, vel, μ;
+                                           scheme=:upwind, method=:dec)
+        -> (A, L, M)
+
+Assemble and return the transport operator `A`, Laplace matrix `L`, and mass
+matrix `M` for use in an advection–diffusion solve.
+
+`vel` accepts any format supported by `edge_flux_velocity`.
+"""
+function assemble_advection_diffusion_operators(
+        mesh   :: SurfaceMesh{T},
+        geom   :: SurfaceGeometry{T},
+        dec    :: SurfaceDEC{T},
+        vel;
+        scheme :: Symbol = :upwind,
+        method :: Symbol = :dec,
+) where {T}
+    A = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L = laplace_matrix(mesh, geom, dec; method=method)
+    M = mass_matrix(mesh, geom)
+    return A, L, M
+end
+
+function assemble_advection_diffusion_operators(
+        mesh   :: CurveMesh{T},
+        geom   :: CurveGeometry{T},
+        dec    :: CurveDEC{T},
+        vel;
+        scheme :: Symbol = :upwind,
+        method :: Symbol = :dec,
+) where {T}
+    A = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L = laplace_matrix(mesh, geom, dec; method=method)
+    M = mass_matrix(mesh, geom)
+    return A, L, M
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IMEX step: transport explicit, diffusion implicit
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    step_surface_advection_diffusion_imex(mesh, geom, dec, uⁿ, vel, dt, μ;
+                                          scheme=:upwind,
+                                          rhs=nothing,
+                                          factorization=nothing,
+                                          method=:dec)
+        -> (uⁿ⁺¹, factorization)
+
+Advance the advection–diffusion equation
+
+    du/dt + M⁻¹ A u + μ L u = g
+
+by one IMEX (implicit-explicit) step:
+
+    (I + dt μ L) uⁿ⁺¹ = uⁿ - dt M⁻¹ A uⁿ + dt g
+
+Transport (M⁻¹ A uⁿ) is treated **explicitly** (evaluated at old time level).
+Diffusion (μ L uⁿ⁺¹) is treated **implicitly**.
+
+Parameters
+----------
+- `vel`           – velocity field (any format accepted by `edge_flux_velocity`).
+- `dt`            – time step size.
+- `μ`             – diffusion coefficient.
+- `scheme`        – advection scheme: `:upwind` (default) or `:centered`.
+- `rhs`           – optional pointwise source term `g` (vertex vector).
+- `factorization` – pre-computed factorization of `(I + dt μ L)`; reuse for
+                    efficiency when `dt`, `μ` are constant.
+- `method`        – Laplace assembly method (`:dec` or `:cotan`).
+
+Returns
+-------
+`(uⁿ⁺¹, fac)` – solution at next time level and the factorization for reuse.
+"""
+function step_surface_advection_diffusion_imex(
+        mesh          :: SurfaceMesh{T},
+        geom          :: SurfaceGeometry{T},
+        dec           :: SurfaceDEC{T},
+        uⁿ            :: AbstractVector{T},
+        vel,
+        dt            :: Real,
+        μ             :: Real;
+        scheme        :: Symbol = :upwind,
+        rhs           :: Union{AbstractVector{T},Nothing} = nothing,
+        factorization :: Any    = nothing,
+        method        :: Symbol = :dec,
+) where {T}
+    A    = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L    = laplace_matrix(mesh, geom, dec; method=method)
+    M    = mass_matrix(mesh, geom)
+    Minv = _inv_diag(M)
+    dt   = T(dt); μ = T(μ)
+    nv   = length(uⁿ)
+
+    # Explicit RHS: uⁿ - dt M⁻¹ A uⁿ + dt g
+    b = uⁿ .- dt .* (Minv * (A * uⁿ))
+    if rhs !== nothing
+        b .+= dt .* rhs
+    end
+
+    # Implicit diffusion LHS: I + dt μ L
+    if factorization === nothing
+        Alhs = sparse(T(1) * LinearAlgebra.I(nv)) + dt * μ * L
+        fac  = factorize(Alhs)
+    else
+        fac  = factorization
+    end
+
+    uⁿ⁺¹ = fac \ b
+    return uⁿ⁺¹, fac
+end
+
+"""
+    step_surface_advection_diffusion_imex(mesh::CurveMesh, ...) -> (uⁿ⁺¹, fac)
+
+IMEX advection–diffusion step for a curve.
+"""
+function step_surface_advection_diffusion_imex(
+        mesh          :: CurveMesh{T},
+        geom          :: CurveGeometry{T},
+        dec           :: CurveDEC{T},
+        uⁿ            :: AbstractVector{T},
+        vel,
+        dt            :: Real,
+        μ             :: Real;
+        scheme        :: Symbol = :upwind,
+        rhs           :: Union{AbstractVector{T},Nothing} = nothing,
+        factorization :: Any    = nothing,
+        method        :: Symbol = :dec,
+) where {T}
+    A    = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L    = laplace_matrix(mesh, geom, dec; method=method)
+    M    = mass_matrix(mesh, geom)
+    Minv = _inv_diag(M)
+    dt   = T(dt); μ = T(μ)
+    nv   = length(uⁿ)
+
+    b = uⁿ .- dt .* (Minv * (A * uⁿ))
+    if rhs !== nothing
+        b .+= dt .* rhs
+    end
+
+    if factorization === nothing
+        Alhs = sparse(T(1) * LinearAlgebra.I(nv)) + dt * μ * L
+        fac  = factorize(Alhs)
+    else
+        fac  = factorization
+    end
+
+    uⁿ⁺¹ = fac \ b
+    return uⁿ⁺¹, fac
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Fully implicit backward-Euler step
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    step_surface_advection_diffusion_backward_euler(mesh, geom, dec, uⁿ, vel,
+                                                    dt, μ;
+                                                    scheme=:upwind,
+                                                    rhs=nothing,
+                                                    method=:dec)
+        -> Vector{T}
+
+Advance the advection–diffusion equation by one fully implicit backward-Euler
+step.  Since the transport operator A depends on the velocity field (which is
+prescribed and static), we can assemble the full system matrix:
+
+    (I + dt M⁻¹ A + dt μ L) uⁿ⁺¹ = uⁿ + dt g
+
+Note: this builds a new factorization every call because A changes with `vel`.
+"""
+function step_surface_advection_diffusion_backward_euler(
+        mesh   :: SurfaceMesh{T},
+        geom   :: SurfaceGeometry{T},
+        dec    :: SurfaceDEC{T},
+        uⁿ     :: AbstractVector{T},
+        vel,
+        dt     :: Real,
+        μ      :: Real;
+        scheme :: Symbol = :upwind,
+        rhs    :: Union{AbstractVector{T},Nothing} = nothing,
+        method :: Symbol = :dec,
+) :: Vector{T} where {T}
+    A    = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L    = laplace_matrix(mesh, geom, dec; method=method)
+    M    = mass_matrix(mesh, geom)
+    Minv = _inv_diag(M)
+    dt   = T(dt); μ = T(μ)
+    nv   = length(uⁿ)
+
+    b = copy(uⁿ)
+    if rhs !== nothing
+        b .+= dt .* rhs
+    end
+
+    Alhs = sparse(T(1) * LinearAlgebra.I(nv)) + dt * Minv * A + dt * μ * L
+    return Alhs \ b
+end
+
+"""
+    step_surface_advection_diffusion_backward_euler(mesh::CurveMesh, ...) -> Vector{T}
+
+Fully implicit backward-Euler step for a curve.
+"""
+function step_surface_advection_diffusion_backward_euler(
+        mesh   :: CurveMesh{T},
+        geom   :: CurveGeometry{T},
+        dec    :: CurveDEC{T},
+        uⁿ     :: AbstractVector{T},
+        vel,
+        dt     :: Real,
+        μ      :: Real;
+        scheme :: Symbol = :upwind,
+        rhs    :: Union{AbstractVector{T},Nothing} = nothing,
+        method :: Symbol = :dec,
+) :: Vector{T} where {T}
+    A    = assemble_transport_operator(mesh, geom, vel; scheme=scheme)
+    L    = laplace_matrix(mesh, geom, dec; method=method)
+    M    = mass_matrix(mesh, geom)
+    Minv = _inv_diag(M)
+    dt   = T(dt); μ = T(μ)
+    nv   = length(uⁿ)
+
+    b = copy(uⁿ)
+    if rhs !== nothing
+        b .+= dt .* rhs
+    end
+
+    Alhs = sparse(T(1) * LinearAlgebra.I(nv)) + dt * Minv * A + dt * μ * L
+    return Alhs \ b
+end
