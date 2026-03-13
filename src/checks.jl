@@ -172,3 +172,112 @@ function check_dec(
         warnings               = warnings,
     )
 end
+
+"""
+    euler_characteristic(mesh::SurfaceMesh) -> Int
+
+Compute the Euler characteristic chi = V - E + F for a triangulated surface.
+
+Standard values:
+- Sphere (genus 0): chi = 2
+- Torus  (genus 1): chi = 0
+- Genus-g surface:  chi = 2 - 2g
+"""
+function euler_characteristic(mesh::SurfaceMesh) :: Int
+    nv   = length(mesh.points)
+    nf   = length(mesh.faces)
+    topo = build_topology(mesh)
+    ne   = length(topo.edges)
+    return nv - ne + nf
+end
+
+"""
+    gauss_bonnet_residual(mesh::SurfaceMesh{T}, geom::SurfaceGeometry{T}) -> T
+
+Return the absolute residual of the discrete Gauss-Bonnet theorem:
+
+    |int K dA - 2 pi chi|
+
+where `int K dA` is the integrated discrete Gaussian curvature (angle-defect
+sum) and `chi` is the Euler characteristic.  For a well-formed closed surface
+this should be near machine precision.
+"""
+function gauss_bonnet_residual(
+        mesh :: SurfaceMesh{T},
+        geom :: SurfaceGeometry{T},
+) :: T where {T}
+    chi    = euler_characteristic(mesh)
+    intK   = integrated_gaussian_curvature(mesh, geom)
+    target = 2 * T(π) * chi
+    return abs(intK - target)
+end
+
+"""
+    star1_sign_report(dec::SurfaceDEC) -> NamedTuple
+
+Return a report on the sign structure of the Hodge-star star1 diagonal.
+
+Fields of the returned tuple
+-----------------------------
+- `n_entries     :: Int`   – total number of diagonal entries.
+- `n_nonpositive :: Int`   – number of entries <= 0.
+- `frac_nonpositive :: Float64` – fraction non-positive.
+- `min_entry     :: T`     – minimum diagonal entry.
+- `all_positive  :: Bool`  – true if all entries are strictly positive.
+"""
+function star1_sign_report(dec::SurfaceDEC{T}) :: NamedTuple where {T}
+    d = diag(dec.star1)
+    n    = length(d)
+    n_np = count(x -> x <= zero(T), d)
+    return (
+        n_entries       = n,
+        n_nonpositive   = n_np,
+        frac_nonpositive = n_np / n,
+        min_entry       = minimum(d),
+        all_positive    = n_np == 0,
+    )
+end
+
+"""
+    compare_laplace_methods(mesh::SurfaceMesh{T}, geom::SurfaceGeometry{T}) -> NamedTuple
+
+Assemble the scalar Laplace-Beltrami using both the DEC factored path and the
+direct cotan path, then compare.
+
+Fields of the returned tuple
+-----------------------------
+- `norm_inf    :: T`  – max absolute entry-wise difference: ||L_dec - L_cotan||_inf.
+- `norm_frob   :: T`  – Frobenius norm of the difference.
+- `dec_nullspace  :: Bool` – L_dec * ones approx 0 (tol = sqrt(eps)).
+- `cotan_nullspace :: Bool` – L_cotan * ones approx 0.
+- `max_dec_res  :: T` – max |L_dec * ones|.
+- `max_cotan_res :: T` – max |L_cotan * ones|.
+"""
+function compare_laplace_methods(
+        mesh :: SurfaceMesh{T},
+        geom :: SurfaceGeometry{T},
+) :: NamedTuple where {T}
+    nv   = length(mesh.points)
+    L_dec   = build_laplace_beltrami(mesh, geom; method=:dec)
+    L_cotan = build_laplace_beltrami(mesh, geom; method=:cotan)
+    diff = L_dec - L_cotan
+
+    norm_inf  = maximum(abs, diff)
+    norm_frob = sqrt(sum(x -> x^2, diff.nzval))
+
+    tol = sqrt(eps(T))
+    ones_v = ones(T, nv)
+    res_dec   = L_dec   * ones_v
+    res_cotan = L_cotan * ones_v
+    max_dec   = maximum(abs, res_dec)
+    max_cotan = maximum(abs, res_cotan)
+
+    return (
+        norm_inf         = norm_inf,
+        norm_frob        = norm_frob,
+        dec_nullspace    = max_dec   < tol,
+        cotan_nullspace  = max_cotan < tol,
+        max_dec_res      = max_dec,
+        max_cotan_res    = max_cotan,
+    )
+end

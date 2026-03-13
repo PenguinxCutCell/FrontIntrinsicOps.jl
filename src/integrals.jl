@@ -158,3 +158,46 @@ function integrate_face_field(
 ) :: T where {T}
     return dot(geom.face_areas, u)
 end
+
+"""
+    integrated_gaussian_curvature(mesh::SurfaceMesh{T}, geom::SurfaceGeometry{T}) -> T
+
+Return the integral of the discrete Gaussian curvature over the surface:
+
+    int K dA = sum_v K(v) * A_v = sum_v (2pi - sum_f theta_{v,f})
+
+where theta_{v,f} is the interior angle of face f at vertex v and A_v is the
+vertex dual area.  By the Gauss-Bonnet theorem this equals 2 pi chi for a
+closed orientable surface with Euler characteristic chi.
+
+Note: this function uses the raw angle defect (independent of the dual-area
+choice) since sum_v (2pi - angle_sum_v) = 2 pi chi exactly.
+"""
+function integrated_gaussian_curvature(
+        mesh :: SurfaceMesh{T},
+        geom :: SurfaceGeometry{T},
+) :: T where {T}
+    pts   = mesh.points
+    faces = mesh.faces
+    nv    = length(pts)
+
+    angle_sum = zeros(T, nv)
+    for face in faces
+        a, b, c = pts[face[1]], pts[face[2]], pts[face[3]]
+        ab = b - a; ac = c - a
+        ba = a - b; bc = c - b
+        ca = a - c; cb = b - c
+        theta_a = acos(clamp(dot(normalize_safe(ab), normalize_safe(ac)), -one(T), one(T)))
+        theta_b = acos(clamp(dot(normalize_safe(ba), normalize_safe(bc)), -one(T), one(T)))
+        theta_c = acos(clamp(dot(normalize_safe(ca), normalize_safe(cb)), -one(T), one(T)))
+        angle_sum[face[1]] += theta_a
+        angle_sum[face[2]] += theta_b
+        angle_sum[face[3]] += theta_c
+    end
+
+    total = zero(T)
+    for vi in 1:nv
+        total += 2*T(π) - angle_sum[vi]
+    end
+    return total
+end

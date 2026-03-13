@@ -152,5 +152,6 @@ function compute_curvature(
         geom.vertex_dual_areas,
         geom.vertex_normals,
         Hn, H, K,
+        geom.dual_area_method,
     )
 end
