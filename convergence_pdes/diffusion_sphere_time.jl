@@ -30,7 +30,7 @@ print_header("Time Refinement Convergence: Diffusion on Unit Sphere")
 # Level 3: h≈0.099, spatial floor ~1.6e-04.
 # CN temporal error at dt=0.25 should dominate spatial floor.
 
-mesh = generate_icosphere(R, 3)
+mesh = generate_icosphere(R, 7)
 geom = compute_geometry(mesh)
 dec  = build_dec(mesh, geom)
 
