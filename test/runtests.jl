@@ -35,4 +35,17 @@ include("test_helpers.jl")
     @testset "Gaussian curvature convergence" begin
         include("test_gaussian_curvature_convergence.jl")
     end
+    # v0.3 tests
+    @testset "Surface diffusion and Poisson" begin
+        include("test_surface_diffusion.jl")
+    end
+    @testset "Surface transport" begin
+        include("test_surface_transport.jl")
+    end
+    @testset "k-form operators" begin
+        include("test_kforms.jl")
+    end
+    @testset "Allocation sanity" begin
+        include("test_allocations.jl")
+    end
 end
