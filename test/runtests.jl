@@ -61,4 +61,16 @@ include("test_helpers.jl")
     @testset "Transport limiters, open surfaces, caching, performance" begin
         include("test_v04_misc.jl")
     end
+    @testset "High-resolution transport" begin
+        include("test_transport_highres.jl")
+    end
+    @testset "Open surfaces" begin
+        include("test_open_surfaces.jl")
+    end
+    @testset "PDE cache" begin
+        include("test_cache.jl")
+    end
+    @testset "Allocations v0.4" begin
+        include("test_allocations_v04.jl")
+    end
 end

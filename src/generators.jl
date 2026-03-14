@@ -10,9 +10,11 @@
 #
 # Surface generators
 # ------------------
-# * `generate_uvsphere(R, nphi, ntheta)` – UV-sphere (latitude-longitude).
-# * `generate_icosphere(R, level)`       – icosahedron refined to level k.
-# * `generate_torus(R, r, ntheta, nphi)` – torus with major radius R, minor r.
+# * `generate_uvsphere(R, nphi, ntheta)`     – UV-sphere (latitude-longitude).
+# * `generate_icosphere(R, level)`           – icosahedron refined to level k.
+# * `generate_torus(R, r, ntheta, nphi)`     – torus with major radius R, minor r.
+# * `generate_ellipsoid(a, b, c, nphi, ntheta)` – axis-aligned ellipsoid.
+# * `generate_perturbed_sphere(R, ε, k, nphi, ntheta)` – bumpy sphere.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Curve generators
@@ -261,6 +263,195 @@ function generate_torus(
             push!(faces, SVector{3,Int}(v00, v10, v11))
             push!(faces, SVector{3,Int}(v00, v11, v01))
         end
+    end
+
+    return SurfaceMesh{T}(pts, faces)
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Ellipsoid generator
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    generate_ellipsoid(a::T, b::T, c::T, nphi::Int, ntheta::Int) -> SurfaceMesh{T}
+
+Generate a triangulated ellipsoid with semi-axes `a`, `b`, `c` using a
+UV-sphere topology.
+
+Parametrisation:
+  x(φ, θ) = a cos(φ) cos(θ)
+  y(φ, θ) = b cos(φ) sin(θ)
+  z(φ, θ) = c sin(φ)
+
+For `a = b = c = R` this reduces to a sphere of radius R.
+
+Parameters
+----------
+- `a`, `b`, `c` – semi-axis lengths (all > 0).
+- `nphi`        – number of latitude bands (≥ 2).
+- `ntheta`      – number of longitude sectors (≥ 3).
+"""
+function generate_ellipsoid(
+        a      :: T,
+        b      :: T,
+        c      :: T,
+        nphi   :: Int,
+        ntheta :: Int,
+) :: SurfaceMesh{T} where {T<:AbstractFloat}
+    a > 0 || error("generate_ellipsoid: a must be positive")
+    b > 0 || error("generate_ellipsoid: b must be positive")
+    c > 0 || error("generate_ellipsoid: c must be positive")
+    nphi   >= 2 || error("generate_ellipsoid: nphi must be >= 2")
+    ntheta >= 3 || error("generate_ellipsoid: ntheta must be >= 3")
+
+    pts   = SVector{3,T}[]
+    faces = SVector{3,Int}[]
+
+    # South pole
+    push!(pts, SVector{3,T}(zero(T), zero(T), -c))
+
+    # Interior latitude rings
+    for i in 1:(nphi-1)
+        phi = -T(π)/2 + i * T(π) / nphi
+        for j in 0:(ntheta-1)
+            theta = j * 2T(π) / ntheta
+            push!(pts, SVector{3,T}(a * cos(phi) * cos(theta),
+                                    b * cos(phi) * sin(theta),
+                                    c * sin(phi)))
+        end
+    end
+
+    # North pole
+    push!(pts, SVector{3,T}(zero(T), zero(T), c))
+
+    south = 1
+    north = length(pts)
+
+    # Bottom cap
+    for j in 0:(ntheta-1)
+        v1 = 2 + j
+        v2 = 2 + mod(j+1, ntheta)
+        push!(faces, SVector{3,Int}(south, v2, v1))
+    end
+
+    # Interior quads
+    for i in 1:(nphi-2)
+        for j in 0:(ntheta-1)
+            v00 = 2 + (i-1)*ntheta + j
+            v01 = 2 + (i-1)*ntheta + mod(j+1, ntheta)
+            v10 = 2 + i*ntheta + j
+            v11 = 2 + i*ntheta + mod(j+1, ntheta)
+            push!(faces, SVector{3,Int}(v00, v01, v11))
+            push!(faces, SVector{3,Int}(v00, v11, v10))
+        end
+    end
+
+    # Top cap
+    base = 2 + (nphi-2)*ntheta
+    for j in 0:(ntheta-1)
+        v1 = base + j
+        v2 = base + mod(j+1, ntheta)
+        push!(faces, SVector{3,Int}(north, v1, v2))
+    end
+
+    return SurfaceMesh{T}(pts, faces)
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Perturbed (bumpy) sphere generator
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    generate_perturbed_sphere(R::T, ε::T, k::Int, nphi::Int, ntheta::Int)
+        -> SurfaceMesh{T}
+
+Generate a "bumpy sphere" — a sphere of radius `R` perturbed by a smooth
+radial bump of amplitude `ε` and mode number `k`.
+
+The radial map is:
+    r(φ, θ) = R * (1 + ε cos(k φ) cos(k θ))
+
+For ε = 0 this reduces exactly to a sphere.  Small |ε| < 1 gives a smooth
+closed surface topologically equivalent to a sphere, useful for verifying
+that PDE solvers work on non-spherically-symmetric geometries.
+
+Parameters
+----------
+- `R`      – mean radius (> 0).
+- `ε`      – perturbation amplitude; keep |ε| < 1 for a valid embedding.
+- `k`      – perturbation mode number (≥ 1).
+- `nphi`   – number of latitude bands (≥ 2).
+- `ntheta` – number of longitude sectors (≥ 3).
+"""
+function generate_perturbed_sphere(
+        R      :: T,
+        ε      :: T,
+        k      :: Int,
+        nphi   :: Int,
+        ntheta :: Int,
+) :: SurfaceMesh{T} where {T<:AbstractFloat}
+    R > 0 || error("generate_perturbed_sphere: R must be positive")
+    abs(ε) < one(T) || error("generate_perturbed_sphere: |ε| must be < 1")
+    k >= 1 || error("generate_perturbed_sphere: k must be >= 1")
+    nphi   >= 2 || error("generate_perturbed_sphere: nphi must be >= 2")
+    ntheta >= 3 || error("generate_perturbed_sphere: ntheta must be >= 3")
+
+    pts   = SVector{3,T}[]
+    faces = SVector{3,Int}[]
+
+    # Helper: radial map
+    r_map(phi, theta) = R * (one(T) + ε * cos(T(k) * phi) * cos(T(k) * theta))
+
+    # South pole
+    phi_s = -T(π)/2
+    rs    = r_map(phi_s, zero(T))
+    push!(pts, SVector{3,T}(zero(T), zero(T), -abs(rs)))
+
+    # Interior latitude rings
+    for i in 1:(nphi-1)
+        phi = -T(π)/2 + i * T(π) / nphi
+        for j in 0:(ntheta-1)
+            theta = j * 2T(π) / ntheta
+            r     = r_map(phi, theta)
+            push!(pts, SVector{3,T}(r * cos(phi) * cos(theta),
+                                    r * cos(phi) * sin(theta),
+                                    r * sin(phi)))
+        end
+    end
+
+    # North pole
+    phi_n = T(π)/2
+    rn    = r_map(phi_n, zero(T))
+    push!(pts, SVector{3,T}(zero(T), zero(T), abs(rn)))
+
+    south = 1
+    north = length(pts)
+
+    # Bottom cap
+    for j in 0:(ntheta-1)
+        v1 = 2 + j
+        v2 = 2 + mod(j+1, ntheta)
+        push!(faces, SVector{3,Int}(south, v2, v1))
+    end
+
+    # Interior quads
+    for i in 1:(nphi-2)
+        for j in 0:(ntheta-1)
+            v00 = 2 + (i-1)*ntheta + j
+            v01 = 2 + (i-1)*ntheta + mod(j+1, ntheta)
+            v10 = 2 + i*ntheta + j
+            v11 = 2 + i*ntheta + mod(j+1, ntheta)
+            push!(faces, SVector{3,Int}(v00, v01, v11))
+            push!(faces, SVector{3,Int}(v00, v11, v10))
+        end
+    end
+
+    # Top cap
+    base = 2 + (nphi-2)*ntheta
+    for j in 0:(ntheta-1)
+        v1 = base + j
+        v2 = base + mod(j+1, ntheta)
+        push!(faces, SVector{3,Int}(north, v1, v2))
     end
 
     return SurfaceMesh{T}(pts, faces)

@@ -107,6 +107,8 @@ export
     generate_uvsphere,
     generate_icosphere,
     generate_torus,
+    generate_ellipsoid,
+    generate_perturbed_sphere,
 
     # Topology
     MeshTopology,
