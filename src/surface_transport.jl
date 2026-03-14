@@ -161,19 +161,7 @@ function edge_flux_velocity(
         vel  :: Vector{SVector{3,T}},
 ) :: Vector{T} where {T}
     topo = build_topology(mesh)
-    ne   = length(topo.edges)
-    nv   = length(mesh.points)
-    length(vel) == nv || error("edge_flux_velocity: velocity length mismatch")
-    vflux = Vector{T}(undef, ne)
-    @inbounds for (ei, e) in enumerate(topo.edges)
-        i, j  = e[1], e[2]
-        vmid  = (vel[i] + vel[j]) / 2
-        dp    = mesh.points[j] - mesh.points[i]
-        len   = norm(dp)
-        t     = len > eps(T) ? dp / len : zero(SVector{3,T})
-        vflux[ei] = dot(vmid, t)
-    end
-    return vflux
+    return _edge_flux_velocity_from_topo(mesh, topo, vel)
 end
 
 function edge_flux_velocity(
@@ -209,13 +197,73 @@ function edge_flux_velocity(
         geom :: SurfaceGeometry{T},
         vel  :: Function,
 ) :: Vector{T} where {T}
+    topo = build_topology(mesh)
+    return _edge_flux_velocity_from_topo(mesh, topo, vel)
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Internal: edge flux velocity from pre-built topology (avoids rebuild)
+# ─────────────────────────────────────────────────────────────────────────────
+
+function _edge_flux_velocity_from_topo(
+        mesh  :: SurfaceMesh{T},
+        topo  :: MeshTopology,
+        vel   :: Vector{SVector{3,T}},
+) :: Vector{T} where {T}
+    ne  = length(topo.edges)
+    nv  = length(mesh.points)
+    length(vel) == nv || error("edge_flux_velocity: velocity length mismatch")
+    vflux = Vector{T}(undef, ne)
+    @inbounds for (ei, e) in enumerate(topo.edges)
+        i, j  = e[1], e[2]
+        vmid  = (vel[i] + vel[j]) / 2
+        dp    = mesh.points[j] - mesh.points[i]
+        len   = norm(dp)
+        t     = len > eps(T) ? dp / len : zero(SVector{3,T})
+        vflux[ei] = dot(vmid, t)
+    end
+    return vflux
+end
+
+function _edge_flux_velocity_from_topo(
+        mesh  :: SurfaceMesh{T},
+        topo  :: MeshTopology,
+        vel   :: AbstractMatrix,
+) :: Vector{T} where {T}
+    nv = length(mesh.points)
+    size(vel, 1) == nv && size(vel, 2) == 3 ||
+        error("edge_flux_velocity: velocity matrix must be (nv × 3)")
+    vel_vecs = [SVector{3,T}(vel[i,1], vel[i,2], vel[i,3]) for i in 1:nv]
+    return _edge_flux_velocity_from_topo(mesh, topo, vel_vecs)
+end
+
+function _edge_flux_velocity_from_topo(
+        mesh  :: SurfaceMesh{T},
+        topo  :: MeshTopology,
+        vel   :: AbstractVector{T},
+) :: Vector{T} where {T}
+    ne = length(topo.edges)
+    nv = length(mesh.points)
+    if length(vel) == ne
+        return convert(Vector{T}, vel)
+    else
+        error("edge_flux_velocity: velocity length $(length(vel)) does not " *
+              "match ne=$ne. For per-vertex velocities use Vector{SVector{3,T}}.")
+    end
+end
+
+function _edge_flux_velocity_from_topo(
+        mesh  :: SurfaceMesh{T},
+        topo  :: MeshTopology,
+        vel   :: Function,
+) :: Vector{T} where {T}
     nv = length(mesh.points)
     vel_vecs = Vector{SVector{3,T}}(undef, nv)
     @inbounds for i in 1:nv
         v = vel(mesh.points[i])
         vel_vecs[i] = SVector{3,T}(v[1], v[2], v[3])
     end
-    return edge_flux_velocity(mesh, geom, vel_vecs)
+    return _edge_flux_velocity_from_topo(mesh, topo, vel_vecs)
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -309,13 +357,18 @@ Assemble the conservative advection matrix A for a triangulated surface.
 
 The semi-discrete equation is:  M du/dt + A u = 0.
 
-This is a pragmatic edge-flux discretisation for vertex-based 0-form unknowns
-on the primal mesh.  For each edge e = (i, j):
+The transport operator uses the DEC-consistent edge-flux formula:
 
-- `:centered`: flux = vₑ * (uᵢ + uⱼ)/2  (consistent, but not monotone).
-- `:upwind`:   donor-cell (first-order upwind for stability).
+    (A u)_i = Σ_e  d₀[e,i] · w_e · vₑ · lₑ · u_e^{scheme}
 
-The edge flux velocity vₑ is computed from `vel` via `edge_flux_velocity`.
+where w_e = (cot α_e + cot β_e)/2 is the cotan Hodge-⋆₁ weight,
+lₑ is the primal edge length, and vₑ = (v_i + v_j)/2 · tₑ is the
+edge-flux velocity.  This recovers the correct dual-edge normal flux on
+a Voronoi dual (wₑ · lₑ = l_e^{dual}) and is second-order consistent on
+smooth meshes.
+
+- `:centered`: u_e = (u_i + u_j)/2  (second-order, but not monotone).
+- `:upwind`:   u_e = donor-cell value (first-order, stable).
 """
 function assemble_transport_operator(
         mesh   :: SurfaceMesh{T},
@@ -327,10 +380,15 @@ function assemble_transport_operator(
         error("assemble_transport_operator: unknown scheme $(repr(scheme)). " *
               "Use :centered or :upwind.")
 
-    vflux = edge_flux_velocity(mesh, geom, vel)
+    # Build topology once and reuse it for flux computation and assembly.
     topo  = build_topology(mesh)
     ne    = length(topo.edges)
     nv    = length(mesh.points)
+    vflux = _edge_flux_velocity_from_topo(mesh, topo, vel)
+
+    # DEC ⋆₁ cotan weights for geometric consistency (wₑ · lₑ = l_e^{dual}
+    # on a Voronoi dual, ensuring correct O(v/h) scaling and consistency).
+    cw = _surface_cotan_weights(mesh, topo)
 
     I_ind = Int[]
     J_ind = Int[]
@@ -341,7 +399,8 @@ function assemble_transport_operator(
 
     for (ei, e) in enumerate(topo.edges)
         i, j = e[1], e[2]
-        ve   = vflux[ei]
+        # DEC-consistent edge flux: w_e * v_e * l_e
+        ve   = cw[ei] * vflux[ei] * geom.edge_lengths[ei]
 
         if scheme === :centered
             push!(I_ind, i); push!(J_ind, i); push!(V_val,  ve / 2)
@@ -411,12 +470,13 @@ end
 
 Estimate a stable explicit time step for scalar transport on a surface.
 
-Uses the vertex-based stability criterion:
+Uses the vertex-based stability criterion matching the DEC-consistent
+assembled upwind operator:
 
-    dt = cfl * min_v ( dual_area_v / Σ_{adj e} |vₑ| )
+    dt = cfl * min_v ( dual_area_v / Σ_{adj e} w_e |vₑ| lₑ )
 
-which matches the actual explicit CFL condition for the assembled upwind
-operator on an unstructured mesh.
+where w_e are the cotan ⋆₁ weights, ensuring the criterion matches the
+actual operator assembled by `assemble_transport_operator`.
 """
 function estimate_transport_dt(
         mesh :: SurfaceMesh{T},
@@ -424,14 +484,15 @@ function estimate_transport_dt(
         vel;
         cfl  :: Real = 0.5,
 ) :: T where {T}
-    vflux = edge_flux_velocity(mesh, geom, vel)
     topo  = build_topology(mesh)
+    vflux = _edge_flux_velocity_from_topo(mesh, topo, vel)
+    cw    = _surface_cotan_weights(mesh, topo)
     nv    = length(mesh.points)
 
-    # Accumulate |ve| per vertex
+    # Accumulate w_e * |v_e| * l_e per vertex to match the assembled operator.
     flux_sum = zeros(T, nv)
     for (ei, e) in enumerate(topo.edges)
-        absv = abs(vflux[ei])
+        absv = cw[ei] * abs(vflux[ei]) * geom.edge_lengths[ei]
         flux_sum[e[1]] += absv
         flux_sum[e[2]] += absv
     end
@@ -531,4 +592,48 @@ function _inv_diag(M::SparseMatrixCSC{T,Int}) :: SparseMatrixCSC{T,Int} where {T
     d = diag(M)
     inv_d = [v > eps(T) ? one(T)/v : zero(T) for v in d]
     return spdiagm(0 => inv_d)
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Internal: cotan weights for surface transport operator
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    _surface_cotan_weights(mesh::SurfaceMesh, topo::MeshTopology) -> Vector{T}
+
+Compute the DEC ⋆₁ cotan weights for each edge.
+
+For edge e shared by triangles with opposite angles α, β:
+    w_e = (cot α + cot β) / 2
+
+These weights appear in the Laplace–Beltrami operator and ensure that the
+transport operator correctly discretises the surface divergence theorem.
+On a Voronoi dual, w_e * l_e equals the dual-edge length l_e^{dual}.
+"""
+function _surface_cotan_weights(
+        mesh :: SurfaceMesh{T},
+        topo :: MeshTopology,
+) :: Vector{T} where {T}
+    pts   = mesh.points
+    faces = mesh.faces
+    ne    = length(topo.edges)
+    w     = zeros(T, ne)
+
+    for (fi, face) in enumerate(faces)
+        a, b, c = pts[face[1]], pts[face[2]], pts[face[3]]
+        ab = b - a; ac = c - a
+        bc = c - b; ba = a - b
+        ca = a - c; cb = b - c
+
+        cot_a = cotangent(ab, ac)
+        cot_b = cotangent(bc, ba)
+        cot_c = cotangent(ca, cb)
+
+        fe = topo.face_edges[fi]
+        w[fe[1]] += T(0.5) * cot_c   # edge (a,b), opposite vertex c
+        w[fe[2]] += T(0.5) * cot_a   # edge (b,c), opposite vertex a
+        w[fe[3]] += T(0.5) * cot_b   # edge (c,a), opposite vertex b
+    end
+
+    return w
 end

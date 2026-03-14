@@ -11,6 +11,7 @@ using Test
 using FrontIntrinsicOps
 using LinearAlgebra
 using SparseArrays
+using StaticArrays
 
 @testset "Allocation sanity: laplace_matrix reuse" begin
     mesh = generate_icosphere(1.0, 2)
@@ -78,6 +79,35 @@ end
 
     bytes = @allocated apply_mass!(y, mesh, geom, x)
     @test bytes < 1000
+end
+
+@testset "Allocation sanity: IMEX step with reused factorization and operator" begin
+    mesh = generate_icosphere(1.0, 2)
+    geom = compute_geometry(mesh)
+    dec  = build_dec(mesh, geom)
+
+    z    = Float64[p[3] for p in mesh.points]
+    vel  = SVector{3,Float64}[SVector{3,Float64}(-p[2], p[1], 0.0) for p in mesh.points]
+    dt   = 0.01; μ = 0.1
+
+    A_up = assemble_transport_operator(mesh, geom, vel; scheme=:upwind)
+
+    # Build factorization on first call
+    _, fac = step_surface_advection_diffusion_imex(mesh, geom, dec, z, vel, dt, μ;
+                                                    scheme             = :upwind,
+                                                    transport_operator = A_up)
+    # Warm-up
+    _, fac = step_surface_advection_diffusion_imex(mesh, geom, dec, z, vel, dt, μ;
+                                                    scheme             = :upwind,
+                                                    transport_operator = A_up,
+                                                    factorization      = fac)
+    # Measure: reusing both A and fac should be cheap (only sparse matvec + backsolve)
+    bytes = @allocated step_surface_advection_diffusion_imex(mesh, geom, dec, z, vel, dt, μ;
+                                                              scheme             = :upwind,
+                                                              transport_operator = A_up,
+                                                              factorization      = fac)
+    # Should not reassemble L or rebuild factorization: expect < 1 MB
+    @test bytes < 1_000_000
 end
 
 @testset "Allocation sanity: weighted_mean is non-allocating" begin
