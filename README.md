@@ -14,7 +14,7 @@ Those belong in separate packages.
 
 ## Scope
 
-### What is implemented (v0.2)
+### What is implemented (v0.3)
 
 | Feature | Status |
 |---------|--------|
@@ -40,7 +40,10 @@ Those belong in separate packages.
 | **Gauss–Bonnet diagnostic** `|∫K dA − 2πχ|` | ✓ v0.2 |
 | **star1 sign report** | ✓ v0.2 |
 | **Laplace method comparison** | ✓ v0.2 |
-| **Convergence scripts** | ✓ v0.2 |
+| **Scalar surface diffusion** (BE, CN) | ✓ v0.3 |
+| **Scalar surface transport** (FE, SSP-RK2/3, upwind/centered) | ✓ v0.3 |
+| **Surface advection–diffusion IMEX** | ✓ v0.3 |
+| **Convergence scripts** | ✓ v0.3 |
 
 ### What is deliberately not implemented
 
@@ -117,6 +120,74 @@ dec  = build_dec(mesh, geom)
 
 println("Length         = ", measure(mesh, geom))
 println("Enclosed area  = ", enclosed_measure(mesh))
+```
+
+### Surface diffusion (v0.3)
+
+```julia
+using FrontIntrinsicOps
+
+mesh = generate_icosphere(1.0, 3)
+geom = compute_geometry(mesh)
+dec  = build_dec(mesh, geom)
+
+u   = Float64[p[3] for p in mesh.points]   # initial scalar field
+dt  = 0.01;  μ = 0.1
+
+# Backward-Euler step (reuse factorization for efficiency)
+u, fac = step_surface_diffusion_backward_euler(mesh, geom, dec, u, dt, μ)
+for _ in 2:100
+    u, fac = step_surface_diffusion_backward_euler(mesh, geom, dec, u, dt, μ;
+                                                    factorization=fac)
+end
+```
+
+### Surface transport (v0.3)
+
+```julia
+using FrontIntrinsicOps, StaticArrays
+
+mesh = generate_icosphere(1.0, 3)
+geom = compute_geometry(mesh)
+dec  = build_dec(mesh, geom)
+
+# Rigid-rotation velocity  v = (-y, x, 0)
+vel = SVector{3,Float64}[SVector{3,Float64}(-p[2], p[1], 0.0) for p in mesh.points]
+u   = Float64[p[3] for p in mesh.points]
+
+dt = estimate_transport_dt(mesh, geom, vel; cfl=0.3)
+A  = assemble_transport_operator(mesh, geom, vel; scheme=:upwind)
+
+for _ in 1:10
+    u = step_surface_transport_ssprk3(mesh, geom, A, u, dt)
+end
+```
+
+### Surface advection–diffusion IMEX (v0.3)
+
+```julia
+using FrontIntrinsicOps, StaticArrays
+
+mesh = generate_icosphere(1.0, 3)
+geom = compute_geometry(mesh)
+dec  = build_dec(mesh, geom)
+
+vel = SVector{3,Float64}[SVector{3,Float64}(-p[2], p[1], 0.0) for p in mesh.points]
+u   = Float64[p[3] for p in mesh.points]
+dt  = 0.01;  μ = 0.05
+
+# Pre-assemble the (constant) transport operator for efficiency
+A_up = assemble_transport_operator(mesh, geom, vel; scheme=:upwind)
+
+u, fac = step_surface_advection_diffusion_imex(mesh, geom, dec, u, vel, dt, μ;
+                                                scheme             = :upwind,
+                                                transport_operator = A_up)
+for _ in 2:100
+    u, fac = step_surface_advection_diffusion_imex(mesh, geom, dec, u, vel, dt, μ;
+                                                    scheme             = :upwind,
+                                                    transport_operator = A_up,
+                                                    factorization      = fac)
+end
 ```
 
 ---
@@ -211,6 +282,56 @@ On well-shaped meshes, `‖L_dec − L_cotan‖_∞ < 10⁻¹²`.
 On a sphere of radius $R$:
 $$L x = \frac{2}{R^2}\, x, \quad L y = \frac{2}{R^2}\, y, \quad L z = \frac{2}{R^2}\, z$$
 
+### Scalar transport operator (v0.3)
+
+The conservative advection operator uses the **DEC codifferential** formula:
+
+$$(Au)_i = \sum_e [d_0]_{e,i} \cdot w_e \cdot v_e \cdot \ell_e \cdot u_e^{\text{scheme}}$$
+
+where:
+- $w_e = \tfrac{1}{2}(\cot\alpha_e + \cot\beta_e)$ is the ⋆₁ cotan weight,
+- $\ell_e$ is the primal edge length,
+- $v_e = \tfrac{v_i + v_j}{2} \cdot \hat{t}_e$ is the edge-flux velocity,
+- $u_e^{\text{scheme}}$ is the donor-cell (`:upwind`) or centered (`:centered`) value.
+
+The product $w_e \cdot \ell_e$ equals the dual-edge length on a Voronoi dual,
+making this formula geometrically consistent with the Laplace–Beltrami operator.
+The full semi-discrete equation is:
+
+$$M \frac{du}{dt} + Au = 0, \quad M = \star_0 = \mathrm{diag}(A_i^{\text{dual}})$$
+
+**Convergence rates** (rigid rotation on unit sphere, `z`-field):
+
+| Scheme   | Temporal | Spatial rate |
+|----------|----------|--------------|
+| Upwind   | SSP-RK3  | O(h¹) |
+| Centered | SSP-RK3  | O(h²) |
+
+### Surface advection–diffusion IMEX (v0.3)
+
+The combined PDE:
+
+$$\frac{du}{dt} + M^{-1} A u + \mu L u = g$$
+
+is split into:
+- **Explicit**: transport term $M^{-1} A u^n$.
+- **Implicit**: diffusion term $\mu L u^{n+1}$.
+
+One IMEX step solves the linear system:
+
+$$(I + dt\,\mu\,L)\, u^{n+1} = u^n - dt\, M^{-1} A u^n + dt\, g$$
+
+The factorization of $(I + dt\,\mu\,L)$ is reused across steps when `dt` and
+`μ` are constant (pass `factorization=fac`).  The transport operator `A` should
+be pre-assembled and passed as `transport_operator=A` to avoid reassembly.
+
+**Convergence rates** on the unit sphere (z-field, rotation-invariant):
+
+| Scheme   | Spatial rate |
+|----------|--------------|
+| Upwind   | O(h¹) — first-order numerical diffusion ε_num ∼ |v|h/2 |
+| Centered | O(h²) — matches Laplace–Beltrami accuracy |
+
 ### Angle-defect Gaussian curvature
 
 The discrete Gaussian curvature at vertex $i$ is:
@@ -246,7 +367,7 @@ $|\int K \, dA - 2\pi\chi|$, which should be near machine precision.
 CurveMesh{T}     # 2-D polygonal curve
 SurfaceMesh{T}   # 3-D triangulated surface
 CurveGeometry{T}
-SurfaceGeometry{T}   # now includes dual_area_method::Symbol (v0.2)
+SurfaceGeometry{T}   # includes dual_area_method::Symbol (v0.2)
 CurveDEC{T}
 SurfaceDEC{T}
 ```
@@ -307,11 +428,50 @@ star1_sign_report(dec)             # min entry, count non-positive, fraction
 compare_laplace_methods(mesh, geom)  # ‖L_dec − L_cotan‖, nullspace checks
 ```
 
+### Surface PDEs (v0.3)
+
+```julia
+# Diffusion
+step_surface_diffusion_backward_euler(mesh, geom, dec, u, dt, μ; factorization)
+step_surface_diffusion_crank_nicolson(mesh, geom, dec, u, dt, μ; factorization)
+
+# Transport
+assemble_transport_operator(mesh, geom, vel; scheme=:upwind)   # returns sparse A
+estimate_transport_dt(mesh, geom, vel; cfl=0.5)                # CFL time step
+step_surface_transport_forward_euler(mesh, geom, A, u, dt)
+step_surface_transport_ssprk2(mesh, geom, A, u, dt)
+step_surface_transport_ssprk3(mesh, geom, A, u, dt)
+
+# Advection–diffusion IMEX
+step_surface_advection_diffusion_imex(mesh, geom, dec, u, vel, dt, μ;
+                                       scheme=:upwind,
+                                       transport_operator=A,   # pass to reuse
+                                       factorization=fac)      # pass to reuse
+```
+
 ---
 
-## Convergence scripts (v0.2)
+## Convergence scripts (v0.3)
 
-The `convergence/` folder contains reproducible terminal-only convergence studies.
+The `convergence_pdes/` folder contains reproducible convergence studies for
+the PDE solvers.
+
+```bash
+# Diffusion
+julia --project=. convergence_pdes/diffusion_sphere_mesh.jl     # mesh refinement
+julia --project=. convergence_pdes/diffusion_sphere_time.jl     # time refinement
+
+# Transport
+julia --project=. convergence_pdes/transport_sphere.jl          # mesh refinement
+
+# Advection–diffusion
+julia --project=. convergence_pdes/advection_diffusion_sphere.jl           # time-evolution diagnostic
+julia --project=. convergence_pdes/advection_diffusion_sphere_mesh.jl      # mesh refinement
+```
+
+See `convergence_pdes/README.md` for details.
+
+The `convergence/` folder contains the v0.2 geometry convergence studies:
 
 ```bash
 julia --project=. convergence/circle_convergence.jl
@@ -320,8 +480,6 @@ julia --project=. convergence/torus_convergence.jl
 julia --project=. convergence/poisson_sphere_convergence.jl
 julia --project=. convergence/run_all.jl   # run all
 ```
-
-See `convergence/README.md` for details.
 
 ---
 
@@ -352,12 +510,16 @@ julia --project -e "using Pkg; Pkg.test()"
   Laplace–Beltrami (DEC factored form), mean and Gaussian curvature,
   integral quantities, mesh diagnostics.
 
-- **v0.2** (current): Mesh generators, mixed/Voronoi dual areas, cotan-vs-DEC
+- **v0.2**: Mesh generators, mixed/Voronoi dual areas, cotan-vs-DEC
   Laplace comparison, Euler characteristic, Gauss–Bonnet diagnostic,
   convergence scripts.
 
-- **v0.3**: Surface PDE examples (diffusion, transport of a scalar on the
-  front), k-form operators.
+- **v0.3** (current): Surface PDE solvers with verified convergence —
+  scalar diffusion (BE/CN), conservative scalar transport with DEC-consistent
+  cotan-weighted edge fluxes (upwind/centered, FE/SSP-RK2/RK3), and IMEX
+  advection–diffusion.  Transport mesh convergence fixed (DEC ⋆₁ weights).
+  Allocation reduction for IMEX reuse path.  New mesh convergence study for
+  advection–diffusion.
 
 - **Later (separate package)**: Moving front coupling, cut-cell / embedded
   boundary logic, time integration.
@@ -382,3 +544,4 @@ julia --project -e "using Pkg; Pkg.test()"
 ## License
 
 MIT
+

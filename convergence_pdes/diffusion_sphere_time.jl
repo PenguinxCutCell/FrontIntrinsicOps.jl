@@ -27,8 +27,8 @@ print_header("Time Refinement Convergence: Diffusion on Unit Sphere")
 @printf "  Final decay factor: exp(-μ λ₁ T) = %.4f\n\n" exp(-μ * λ₁ * T_end)
 
 # ── Build spatial mesh ────────────────────────────────────────────────────────
-# Level 3: h≈0.099, spatial floor ~1.6e-04.
-# CN temporal error at dt=0.25 should dominate spatial floor.
+# Level 7: very fine spatial mesh; spatial error floor ≪ temporal error at
+# coarse dt, so temporal convergence is the dominant signal.
 
 mesh = generate_icosphere(R, 7)
 geom = compute_geometry(mesh)
