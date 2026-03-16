@@ -114,5 +114,5 @@ println("Poisson residual: ", maximum(abs, dec.laplacian * u_poisson .- f))
 
 - [Getting started](01_getting_started.md)
 - [Reaction–diffusion tutorial](04_reaction_diffusion.md)
-- [Math: Surface diffusion](../math/07_surface_diffusion.md)
-- [API: PDE solvers](../api/pdes.md)
+- [Math: Surface diffusion](07_surface_diffusion.md)
+- [API: PDE solvers](pdes.md)

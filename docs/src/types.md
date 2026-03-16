@@ -158,6 +158,6 @@ Build with `alloc_diffusion_buffers(nv)` or `alloc_rd_buffers(nv)`.
 
 ## See also
 
-- [Mesh types (math)](../math/01_mesh_types.md)
-- [Discrete exterior calculus (math)](../math/04_dec.md)
-- [Caching and performance (math)](../math/15_caching.md)
+- [Mesh types (math)](01_mesh_types.md)
+- [Discrete exterior calculus (math)](04_dec.md)
+- [Caching and performance (math)](15_caching.md)

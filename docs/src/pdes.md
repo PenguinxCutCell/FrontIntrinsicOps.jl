@@ -255,9 +255,9 @@ enforce_compatibility!(f, mesh, geom)
 
 ## See also
 
-- [Surface diffusion (math)](../math/07_surface_diffusion.md)
-- [Scalar transport (math)](../math/08_transport.md)
-- [Reaction–diffusion (math)](../math/10_reaction_diffusion.md)
-- [Hodge decomposition (math)](../math/12_hodge_decomposition.md)
-- [Open surfaces (math)](../math/14_open_surfaces.md)
-- [Caching (math)](../math/15_caching.md)
+- [Surface diffusion (math)](07_surface_diffusion.md)
+- [Scalar transport (math)](08_transport.md)
+- [Reaction–diffusion (math)](10_reaction_diffusion.md)
+- [Hodge decomposition (math)](12_hodge_decomposition.md)
+- [Open surfaces (math)](14_open_surfaces.md)
+- [Caching (math)](15_caching.md)

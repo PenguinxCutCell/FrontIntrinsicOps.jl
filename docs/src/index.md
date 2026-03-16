@@ -14,22 +14,22 @@ Detailed derivations and formulas for every module:
 
 | Document | Topic |
 |----------|-------|
-| [Mesh types and data structures](math/01_mesh_types.md) | `CurveMesh`, `SurfaceMesh`, and the primal–dual picture |
-| [Topology and incidence matrices](math/02_topology.md) | Edges, faces, orientation, $d_0$, $d_1$ |
-| [Discrete geometry and dual areas](math/03_geometry.md) | Normals, areas, edge lengths, barycentric and mixed duals |
-| [Discrete exterior calculus](math/04_dec.md) | Hodge stars, exterior derivatives, cochains |
-| [Laplace–Beltrami operator](math/05_laplace_beltrami.md) | DEC and cotan formulations, sign convention |
-| [Curvature](math/06_curvature.md) | Signed (curve), mean, Gaussian, Gauss–Bonnet |
-| [Surface diffusion, Poisson, Helmholtz](math/07_surface_diffusion.md) | Implicit time integration, gauge treatment |
-| [Scalar transport](math/08_transport.md) | Conservative DEC fluxes, SSP-RK2/3, CFL |
-| [Advection–diffusion IMEX](math/09_advection_diffusion.md) | Splitting, stability, factory reuse |
-| [Reaction–diffusion IMEX](math/10_reaction_diffusion.md) | θ-scheme, Fisher–KPP, bistable |
-| [Tangential vector calculus](math/11_vector_calculus.md) | Projection, surface gradient/divergence, Whitney forms |
-| [Hodge decomposition](math/12_hodge_decomposition.md) | Helmholtz–Hodge, harmonic forms, genus-$g$ |
-| [High-resolution transport](math/13_highres_transport.md) | Minmod, van Leer, superbee, SSP-RK2 |
-| [Open surfaces and boundary conditions](math/14_open_surfaces.md) | Boundary detection, Dirichlet, Neumann |
-| [Caching and performance](math/15_caching.md) | `SurfacePDECache`, in-place buffers, zero-allocation kernels |
-| [Mesh generators](math/16_generators.md) | UV-sphere, icosphere, torus, ellipsoid, perturbed sphere |
+| [Mesh types and data structures](01_mesh_types.md) | `CurveMesh`, `SurfaceMesh`, and the primal–dual picture |
+| [Topology and incidence matrices](02_topology.md) | Edges, faces, orientation, $d_0$, $d_1$ |
+| [Discrete geometry and dual areas](03_geometry.md) | Normals, areas, edge lengths, barycentric and mixed duals |
+| [Discrete exterior calculus](04_dec.md) | Hodge stars, exterior derivatives, cochains |
+| [Laplace–Beltrami operator](05_laplace_beltrami.md) | DEC and cotan formulations, sign convention |
+| [Curvature](06_curvature.md) | Signed (curve), mean, Gaussian, Gauss–Bonnet |
+| [Surface diffusion, Poisson, Helmholtz](07_surface_diffusion.md) | Implicit time integration, gauge treatment |
+| [Scalar transport](08_transport.md) | Conservative DEC fluxes, SSP-RK2/3, CFL |
+| [Advection–diffusion IMEX](09_advection_diffusion.md) | Splitting, stability, factory reuse |
+| [Reaction–diffusion IMEX](10_reaction_diffusion.md) | θ-scheme, Fisher–KPP, bistable |
+| [Tangential vector calculus](11_vector_calculus.md) | Projection, surface gradient/divergence, Whitney forms |
+| [Hodge decomposition](12_hodge_decomposition.md) | Helmholtz–Hodge, harmonic forms, genus-$g$ |
+| [High-resolution transport](13_highres_transport.md) | Minmod, van Leer, superbee, SSP-RK2 |
+| [Open surfaces and boundary conditions](14_open_surfaces.md) | Boundary detection, Dirichlet, Neumann |
+| [Caching and performance](15_caching.md) | `SurfacePDECache`, in-place buffers, zero-allocation kernels |
+| [Mesh generators](16_generators.md) | UV-sphere, icosphere, torus, ellipsoid, perturbed sphere |
 
 ### API Reference
 
@@ -37,11 +37,11 @@ Concise function signatures and descriptions:
 
 | Document | Module |
 |----------|--------|
-| [Types](api/types.md) | `CurveMesh`, `SurfaceMesh`, `SurfaceGeometry`, … |
-| [Generators](api/generators.md) | `generate_icosphere`, `generate_torus`, `generate_ellipsoid`, … |
-| [Geometry and DEC](api/geometry.md) | `compute_geometry`, `build_dec`, Hodge stars |
-| [PDE solvers](api/pdes.md) | Diffusion, transport, reaction–diffusion, open surfaces |
-| [Diagnostics](api/diagnostics.md) | `check_mesh`, `check_dec`, Gauss–Bonnet, `star1_sign_report` |
+| [Types](types.md) | `CurveMesh`, `SurfaceMesh`, `SurfaceGeometry`, … |
+| [Generators](generators.md) | `generate_icosphere`, `generate_torus`, `generate_ellipsoid`, … |
+| [Geometry and DEC](geometry.md) | `compute_geometry`, `build_dec`, Hodge stars |
+| [PDE solvers](pdes.md) | Diffusion, transport, reaction–diffusion, open surfaces |
+| [Diagnostics](diagnostics.md) | `check_mesh`, `check_dec`, Gauss–Bonnet, `star1_sign_report` |
 
 ### Tutorials
 
@@ -49,12 +49,12 @@ Step-by-step worked examples:
 
 | Document | Topic |
 |----------|-------|
-| [Getting started](tutorials/01_getting_started.md) | Sphere geometry in five lines |
-| [Surface diffusion](tutorials/02_surface_diffusion.md) | Heat equation on the sphere |
-| [Scalar transport](tutorials/03_transport.md) | Rotating a patch with SSP-RK3 |
-| [Reaction–diffusion](tutorials/04_reaction_diffusion.md) | Fisher–KPP wave on the sphere |
-| [Hodge decomposition](tutorials/05_hodge_decomposition.md) | Decomposing a 1-form on sphere and torus |
-| [Open surfaces](tutorials/06_open_surfaces.md) | Poisson with Dirichlet BC on a cap |
+| [Getting started](01_getting_started.md) | Sphere geometry in five lines |
+| [Surface diffusion](02_surface_diffusion.md) | Heat equation on the sphere |
+| [Scalar transport](03_transport.md) | Rotating a patch with SSP-RK3 |
+| [Reaction–diffusion](04_reaction_diffusion.md) | Fisher–KPP wave on the sphere |
+| [Hodge decomposition](05_hodge_decomposition.md) | Decomposing a 1-form on sphere and torus |
+| [Open surfaces](06_open_surfaces.md) | Poisson with Dirichlet BC on a cap |
 
 ---
 

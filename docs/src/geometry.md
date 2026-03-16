@@ -150,7 +150,7 @@ compare_laplace_methods(mesh, geom) → NamedTuple  # ‖L_dec − L_cotan‖
 
 ## See also
 
-- [Geometry (math)](../math/03_geometry.md)
-- [DEC (math)](../math/04_dec.md)
-- [Laplace–Beltrami (math)](../math/05_laplace_beltrami.md)
-- [Curvature (math)](../math/06_curvature.md)
+- [Geometry (math)](03_geometry.md)
+- [DEC (math)](04_dec.md)
+- [Laplace–Beltrami (math)](05_laplace_beltrami.md)
+- [Curvature (math)](06_curvature.md)

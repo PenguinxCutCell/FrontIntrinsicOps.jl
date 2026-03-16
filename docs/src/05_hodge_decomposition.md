@@ -139,7 +139,7 @@ function $\psi$ solves $\tilde{L}\psi = d\alpha$:
 
 ## See also
 
-- [Math: Hodge decomposition](../math/12_hodge_decomposition.md)
-- [Math: Discrete exterior calculus](../math/04_dec.md)
-- [Math: Tangential vector calculus](../math/11_vector_calculus.md)
-- [API: PDE solvers](../api/pdes.md)
+- [Math: Hodge decomposition](12_hodge_decomposition.md)
+- [Math: Discrete exterior calculus](04_dec.md)
+- [Math: Tangential vector calculus](11_vector_calculus.md)
+- [API: PDE solvers](pdes.md)

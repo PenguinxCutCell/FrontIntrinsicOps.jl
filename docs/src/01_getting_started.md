@@ -129,5 +129,5 @@ println("L nullspace: ", rpt.lap_constant_nullspace)
 
 - [Surface diffusion tutorial](02_surface_diffusion.md)
 - [Scalar transport tutorial](03_transport.md)
-- [Math: Discrete geometry](../math/03_geometry.md)
-- [API: Geometry and DEC](../api/geometry.md)
+- [Math: Discrete geometry](03_geometry.md)
+- [API: Geometry and DEC](geometry.md)

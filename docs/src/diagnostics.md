@@ -137,7 +137,7 @@ load_curve_points(pts; closed=true) → CurveMesh{T}
 
 ## See also
 
-- [Topology (math)](../math/02_topology.md)
-- [Geometry (math)](../math/03_geometry.md)
-- [DEC (math)](../math/04_dec.md)
-- [Curvature (math)](../math/06_curvature.md)
+- [Topology (math)](02_topology.md)
+- [Geometry (math)](03_geometry.md)
+- [DEC (math)](04_dec.md)
+- [Curvature (math)](06_curvature.md)

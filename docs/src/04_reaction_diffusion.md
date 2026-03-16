@@ -150,6 +150,6 @@ println("u > 0.8:  ", count(u .> 0.8), " vertices")
 ## See also
 
 - [Surface diffusion tutorial](02_surface_diffusion.md)
-- [Math: Reaction–diffusion](../math/10_reaction_diffusion.md)
-- [Math: Caching and performance](../math/15_caching.md)
-- [API: PDE solvers](../api/pdes.md)
+- [Math: Reaction–diffusion](10_reaction_diffusion.md)
+- [Math: Caching and performance](15_caching.md)
+- [API: PDE solvers](pdes.md)

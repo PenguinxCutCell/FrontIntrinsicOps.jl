@@ -99,5 +99,5 @@ generate_perturbed_sphere(R, ε, k, nphi::Int, ntheta::Int) → SurfaceMesh{T}
 
 ## See also
 
-- [Mesh generators (math)](../math/16_generators.md)
+- [Mesh generators (math)](16_generators.md)
 - [Types](types.md)

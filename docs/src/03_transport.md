@@ -147,6 +147,6 @@ Expected convergence: upwind scheme achieves approximately $O(h^1)$ in $L^\infty
 ## See also
 
 - [Getting started](01_getting_started.md)
-- [Math: Scalar transport](../math/08_transport.md)
-- [Math: High-resolution transport](../math/13_highres_transport.md)
-- [API: PDE solvers](../api/pdes.md)
+- [Math: Scalar transport](08_transport.md)
+- [Math: High-resolution transport](13_highres_transport.md)
+- [API: PDE solvers](pdes.md)

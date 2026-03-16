@@ -174,6 +174,6 @@ end
 
 ## See also
 
-- [Math: Open surfaces](../math/14_open_surfaces.md)
-- [Math: Surface diffusion](../math/07_surface_diffusion.md)
-- [API: PDE solvers](../api/pdes.md)
+- [Math: Open surfaces](14_open_surfaces.md)
+- [Math: Surface diffusion](07_surface_diffusion.md)
+- [API: PDE solvers](pdes.md)
