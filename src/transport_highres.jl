@@ -198,10 +198,10 @@ function assemble_transport_operator_limited(
         error("assemble_transport_operator_limited: unknown limiter $(repr(limiter)).")
     end
 
+    # DEC ⋆₁ cotan weights for geometric consistency (same as assemble_transport_operator)
+    cw = _surface_cotan_weights(mesh, topo)
+
     # Build vertex-to-face adjacency for slope estimation
-    # For each edge (i,j), we need the "far" vertices in adjacent faces to
-    # estimate the gradient ratio.
-    # Simple approach: for each edge, use the face-opposite vertices.
     edge_face_list = topo.edge_faces
     ne = length(topo.edges)
 
@@ -218,32 +218,51 @@ function assemble_transport_operator_limited(
 
         abs(v_e) < eps(T) * 100 && continue
 
-        # Upwind and downwind vertices
+        # DEC-consistent edge flux magnitude (always positive)
+        # Uses the same cotan-weight scaling as assemble_transport_operator
+        flux_lo = abs(cw[ei] * geom.edge_lengths[ei] * v_e)
+
+        # Upwind and downwind vertices (determined by sign of v_e)
         if v_e > zero(T)
             i_up, i_dn = i, j
         else
             i_up, i_dn = j, i
         end
 
-        # Upwind value and a slope estimate using face information
-        # Find faces adjacent to this edge and use opposite vertices
-        faces_e  = edge_face_list[ei]
-        u_up     = u[i_up]
-        u_dn     = u[i_dn]
-        Δu_edge  = u_dn - u_up   # centered difference across edge
+        u_up    = u[i_up]
+        u_dn    = u[i_dn]
+        Δu_edge = u_dn - u_up   # forward difference in flow direction
 
-        # Estimate upwind slope using the "further upwind" information
-        # from adjacent face vertices opposite to i_up
+        # Estimate the "backward slope" at i_up using only upstream far vertices.
+        # A vertex is upstream of i_up if it lies on the opposite side of i_up
+        # from i_dn (dot product with the edge direction is negative).
+        p_up = mesh.points[i_up]
+        t_e  = mesh.points[i_dn] - p_up   # edge direction vector (unnormalized)
+
         slope_far = zero(T)
         n_far     = 0
-        for fi in faces_e
+
+        # First pass: use face-opposite vertices that are upstream of i_up
+        for fi in edge_face_list[ei]
             face = mesh.faces[fi]
             for vi in face
                 if vi != i && vi != j
-                    # This is the "far" vertex in this face
-                    u_far    = u[vi]
-                    # Sign: positive if far vertex is "further upwind"
-                    slope_far += (u_up - u_far)
+                    if dot(mesh.points[vi] - p_up, t_e) < zero(T)
+                        slope_far += (u_up - u[vi])
+                        n_far     += 1
+                    end
+                end
+            end
+        end
+
+        # Fallback: search all vertex-edge neighbours of i_up for upstream ones
+        if n_far == 0
+            for ej in topo.vertex_edges[i_up]
+                i2, j2 = topo.edges[ej][1], topo.edges[ej][2]
+                k = (i2 == i_up) ? j2 : i2
+                k == i_dn && continue
+                if dot(mesh.points[k] - p_up, t_e) < zero(T)
+                    slope_far += (u_up - u[k])
                     n_far     += 1
                 end
             end
@@ -253,36 +272,33 @@ function assemble_transport_operator_limited(
             slope_far /= n_far
         end
 
-        # Limited slope: minmod of the two slope estimates
+        # Slope limiter ratio r = (backward slope) / (forward slope)
         φ_val = if abs(Δu_edge) > eps(T) * 100
-            r     = slope_far / Δu_edge
+            r = slope_far / Δu_edge
             φ_lim(r)
         else
             zero(T)
         end
 
-        # High-resolution flux: F_e = v_e * (u_up + φ * Δu_edge / 2)
-        # Low-order: F_e_lo = v_e * u_up
-        # High-res correction: v_e * φ * Δu_edge / 2
-        flux_lo  = v_e  # factor of u_up applied via matrix
-        flux_cor = v_e * φ_val * T(0.5)
+        # High-resolution correction flux magnitude (always non-negative)
+        flux_cor = flux_lo * φ_val * T(0.5)
 
-        # Low-order upwind contribution:  + flux_lo * u_up  → row i_dn, col i_up
-        # Also: conservation: net flux at i_up is -flux_lo * u_up, at i_dn is +flux_lo * u_up
-        # For A s.t. M du/dt + A u = 0:
-        # d/dt u_i_dn += (1/da_i_dn) * flux_lo * u_up  (inflow)
-        # d/dt u_i_up -= (1/da_i_up) * flux_lo * u_up  (outflow)
+        # Low-order upwind: flux_lo * u_up flows from i_up to i_dn.
+        # In the A matrix (M du/dt + A u = 0):
+        #   A_{i_dn, i_up} += -flux_lo  (inflow to i_dn)
+        #   A_{i_up, i_up} += +flux_lo  (outflow from i_up)
+        push!(I_idx, i_dn);  push!(J_idx, i_up);  push!(Vvals, -flux_lo)
+        push!(I_idx, i_up);  push!(J_idx, i_up);  push!(Vvals, +flux_lo)
 
-        # Low-order upwind part
-        push!(I_idx, i_dn);  push!(J_idx, i_up);  push!(Vvals, -flux_lo)  # inflow to i_dn
-        push!(I_idx, i_up);  push!(J_idx, i_up);  push!(Vvals, +flux_lo)  # outflow from i_up
-
-        # High-resolution correction (from centered difference)
-        if abs(flux_cor) > eps(T)
+        # High-resolution correction: F_cor = flux_lo * φ * (u_dn - u_up) / 2
+        # Contributions (flux_cor = flux_lo * φ / 2 ≥ 0):
+        #   A_{i_dn, i_dn} += -flux_cor,  A_{i_dn, i_up} += +flux_cor
+        #   A_{i_up, i_dn} += +flux_cor,  A_{i_up, i_up} += -flux_cor
+        if flux_cor > eps(T)
             push!(I_idx, i_dn);  push!(J_idx, i_dn);  push!(Vvals, -flux_cor)
-            push!(I_idx, i_dn);  push!(J_idx, i_up);  push!(Vvals, -flux_cor)
+            push!(I_idx, i_dn);  push!(J_idx, i_up);  push!(Vvals, +flux_cor)
             push!(I_idx, i_up);  push!(J_idx, i_dn);  push!(Vvals, +flux_cor)
-            push!(I_idx, i_up);  push!(J_idx, i_up);  push!(Vvals, +flux_cor)
+            push!(I_idx, i_up);  push!(J_idx, i_up);  push!(Vvals, -flux_cor)
         end
     end
 

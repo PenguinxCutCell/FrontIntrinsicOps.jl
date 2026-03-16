@@ -48,8 +48,7 @@ function run_transport_study(mesh, geom, dec, topo, label)
     max_val    = maximum(abs.(u))
     max_init   = maximum(abs.(u0))
 
-    @printf "  %-30s  nv=%5d  max|u|=%.4e  mass_err=%.2e  finite=%s\n" \
-        label nv max_val mass_err string(all(isfinite.(u)))
+    @printf "  %-30s  nv=%5d  max|u|=%.4e  mass_err=%.2e  finite=%s\n" label nv max_val mass_err string(all(isfinite.(u)))
 
     return all(isfinite.(u)), mass_err, max_val, max_init
 end

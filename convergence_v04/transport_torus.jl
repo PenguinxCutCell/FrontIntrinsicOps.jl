@@ -27,15 +27,17 @@ print_header("Convergence: Scalar Transport on Torus (Toroidal Rotation)")
 @printf "  IC: u₀ = cos(θ); exact u(t) = cos(θ − ω t)\n\n"
 
 # ── Mesh refinement loop ──────────────────────────────────────────────────────
+# We refine the toroidal (phi) direction since u₀ = cos(phi) varies toroidally.
+# In generate_torus(R, r, ntheta, nphi): ntheta = poloidal, nphi = toroidal.
 
-ntheta_list = [10, 20, 30, 40]
+nphi_list = [10, 20, 30, 40]   # toroidal resolution (primary)
 hs     = Float64[]
 errors = Float64[]
 nverts = Int[]
 
-for nθ in ntheta_list
-    nφ   = max(4, round(Int, nθ * r / R))
-    mesh = generate_torus(R, r, nθ, nφ)
+for nφ in nphi_list
+    nθ   = max(4, round(Int, nφ * r / R))   # poloidal, proportional to r/R
+    mesh = generate_torus(R, r, nθ, nφ)     # ntheta=nθ (poloidal), nphi=nφ (toroidal)
     geom = compute_geometry(mesh)
     dec  = build_dec(mesh, geom)
     topo = build_topology(mesh)
@@ -67,7 +69,7 @@ for nθ in ntheta_list
     err = weighted_l2_error(mesh, geom, u, u_exact)
 
     push!(hs, h); push!(errors, err); push!(nverts, nv)
-    @printf "  nθ=%3d, nφ=%2d, nv=%5d, h=%.4e, L2_err=%.4e\n" nθ nφ nv h err
+    @printf "  nφ=%3d, nθ=%2d, nv=%5d, h=%.4e, L2_err=%.4e\n" nφ nθ nv h err
 end
 
 # ── Convergence table ─────────────────────────────────────────────────────────

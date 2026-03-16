@@ -63,7 +63,7 @@ res_ell = helmholtz_residual_study(meshes_e, geoms_e, decs_e, hs_ell, α,
 
 print_convergence_table(hs_ell, res_ell;
                          header="Ellipsoid: Helmholtz residual", label="residual")
-println("  Residuals should decrease as mesh is refined.")
+println("  Algebraic residuals near machine precision (expected; condition number grows with refinement).")
 println()
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ res_ps = helmholtz_residual_study(meshes_p, geoms_p, decs_p, hs_ps, α,
 
 print_convergence_table(hs_ps, res_ps;
                          header="Perturbed Sphere: Helmholtz residual", label="residual")
-println("  Residuals should decrease as mesh is refined.")
+println("  Algebraic residuals near machine precision (expected; condition number grows with refinement).")
 println()
 
 # ─────────────────────────────────────────────────────────────────────────────
