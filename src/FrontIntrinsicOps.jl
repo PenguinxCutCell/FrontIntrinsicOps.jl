@@ -9,7 +9,7 @@ discrete operators on a front mesh.  The primary inputs are:
 - Triangulated 3-D closed surfaces (from STL files or mesh generators).
 - Closed 2-D polygonal curves (from CSV files, point lists, or generators).
 
-This package provides (v0.3):
+This package provides (v0.4):
 - Internal mesh types (`CurveMesh`, `SurfaceMesh`) independent of IO.
 - Deterministic mesh generators for convergence studies (v0.2).
 - Topology extraction (edges, adjacency, orientation, manifold checks).
@@ -30,9 +30,16 @@ This package provides (v0.3):
 - Advection–diffusion IMEX time-stepping (v0.3).
 - Codifferential and 1-form Hodge Laplacian (v0.3).
 - Allocation-conscious PDE helpers (v0.3).
+- Surface reaction–diffusion equations with IMEX time stepping (v0.4).
+- Surface vector calculus: projection, gradient, divergence, 1-form conversions (v0.4).
+- Hodge decomposition for discrete 1-forms (v0.4).
+- High-resolution (limiter-based) surface transport (v0.4).
+- Open surface support: boundary detection and Dirichlet/Neumann BCs (v0.4).
+- Operator and factorization caching for repeated solves (v0.4).
+- Low-allocation in-place PDE stepping helpers (v0.4).
 
-Non-goals (v0.3)
-----------------
+Non-goals
+---------
 This package does **not** implement front advection, remeshing, marker
 redistribution, topology changes, or coupling to bulk solvers.  Those
 belong in separate packages.
@@ -70,6 +77,14 @@ include("surface_transport.jl")
 include("surface_advection_diffusion.jl")
 include("kforms.jl")
 include("perf_utils.jl")
+# v0.4: New PDE capabilities
+include("reaction_diffusion.jl")
+include("vector_calculus.jl")
+include("hodge_decomposition.jl")
+include("transport_highres.jl")
+include("open_surfaces.jl")
+include("cache.jl")
+include("performance.jl")
 
 # Public API
 
@@ -92,6 +107,8 @@ export
     generate_uvsphere,
     generate_icosphere,
     generate_torus,
+    generate_ellipsoid,
+    generate_perturbed_sphere,
 
     # Topology
     MeshTopology,
@@ -191,6 +208,72 @@ export
     mul_diag_right!,
     apply_laplace!,
     weighted_l2_error,
-    weighted_linf_error
+    weighted_linf_error,
+
+    # v0.4: Surface reaction–diffusion
+    evaluate_reaction!,
+    fisher_kpp_reaction,
+    linear_decay_reaction,
+    bistable_reaction,
+    step_surface_reaction_diffusion_explicit,
+    step_surface_reaction_diffusion_imex,
+    solve_surface_reaction_diffusion,
+
+    # v0.4: Surface vector calculus
+    tangential_project,
+    tangential_project!,
+    tangential_project_field,
+    gradient_0_to_tangent_vectors,
+    divergence_tangent_vectors,
+    tangent_vectors_to_1form,
+    oneform_to_tangent_vectors,
+    surface_rot_0form,
+
+    # v0.4: Hodge decomposition
+    exact_component_1form,
+    coexact_component_1form,
+    harmonic_component_1form,
+    hodge_decompose_1form,
+    hodge_decomposition_residual,
+    hodge_inner_products,
+
+    # v0.4: High-resolution transport
+    minmod,
+    minmod3,
+    vanleer_limiter,
+    superbee_limiter,
+    assemble_transport_operator_limited,
+    step_surface_transport_limited,
+
+    # v0.4: Open surfaces / boundary conditions
+    detect_boundary_edges,
+    detect_boundary_vertices,
+    is_open_surface,
+    apply_dirichlet!,
+    apply_dirichlet_to_system!,
+    apply_dirichlet_symmetric!,
+    add_neumann_rhs!,
+    boundary_mass_matrix,
+    solve_open_surface_poisson,
+
+    # v0.4: Operator caching
+    SurfacePDECache,
+    CurvePDECache,
+    build_pde_cache,
+    update_pde_cache,
+    step_diffusion_cached,
+    solve_helmholtz_cached,
+
+    # v0.4: Low-allocation performance helpers
+    SurfaceDiffusionBuffers,
+    SurfaceRDBuffers,
+    alloc_diffusion_buffers,
+    alloc_rd_buffers,
+    step_diffusion_inplace!,
+    step_rd_inplace!,
+    apply_mass_inplace!,
+    apply_laplace_inplace!,
+    l2_norm_cached,
+    energy_norm_cached
 
 end # module FrontIntrinsicOps

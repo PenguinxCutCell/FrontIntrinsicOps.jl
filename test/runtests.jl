@@ -48,4 +48,29 @@ include("test_helpers.jl")
     @testset "Allocation sanity" begin
         include("test_allocations.jl")
     end
+    # v0.4 tests
+    @testset "Surface reaction–diffusion" begin
+        include("test_reaction_diffusion.jl")
+    end
+    @testset "Surface vector calculus" begin
+        include("test_vector_calculus.jl")
+    end
+    @testset "Hodge decomposition" begin
+        include("test_hodge_decomposition.jl")
+    end
+    @testset "Transport limiters, open surfaces, caching, performance" begin
+        include("test_v04_misc.jl")
+    end
+    @testset "High-resolution transport" begin
+        include("test_transport_highres.jl")
+    end
+    @testset "Open surfaces" begin
+        include("test_open_surfaces.jl")
+    end
+    @testset "PDE cache" begin
+        include("test_cache.jl")
+    end
+    @testset "Allocations v0.4" begin
+        include("test_allocations_v04.jl")
+    end
 end
