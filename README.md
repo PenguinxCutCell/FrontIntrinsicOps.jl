@@ -4,7 +4,8 @@ A **static interface-geometry / DDG / DEC package** for triangulated front meshe
 
 `FrontIntrinsicOps.jl` computes intrinsic geometric quantities and intrinsic
 discrete exterior calculus (DEC) operators on front meshes.  The primary inputs
-are triangulated 3-D closed surfaces and closed 2-D polygonal curves.
+are triangulated 3-D surfaces and 2-D polygonal curves (open or closed,
+depending on feature).
 
 This package is an **intrinsic operator layer** for interface meshes.  It does
 **not** implement front advection, remeshing, or coupling to bulk solvers.
@@ -31,7 +32,7 @@ save("curve.png", fig)
 
 ## Scope
 
-### What is implemented (v0.3)
+### What is implemented (current)
 
 | Feature | Status |
 |---------|--------|
@@ -62,6 +63,19 @@ save("curve.png", fig)
 | **Surface advection–diffusion IMEX** | ✓ v0.3 |
 | **Convergence scripts** | ✓ v0.3 |
 | **Ambient exact signed-distance queries (curve/surface)** | ✓ v0.5 |
+
+#### Ambient signed-distance queries
+
+| Capability | Status |
+|------------|--------|
+| `CurveMesh` (closed) | ✓ |
+| `CurveMesh` (open) | ✓ |
+| `SurfaceMesh` (closed, oriented) | ✓ |
+| `SurfaceMesh` (open, oriented) | ✓ |
+| `sign_mode=:auto` | ✓ |
+| `sign_mode=:pseudonormal` | ✓ |
+| `sign_mode=:winding` (closed meshes only) | ✓ |
+| `sign_mode=:unsigned` | ✓ |
 
 ### What is deliberately not implemented
 
@@ -233,8 +247,20 @@ Sign modes:
 - `:winding` – valid for closed oriented meshes only (inside/outside sign).
 - `:auto` – uses `:winding` on closed meshes, otherwise `:pseudonormal`.
 
-For open meshes, signed distance represents **oriented side-of-curve/sheet** and
-is not a global inside/outside classification.
+Semantics:
+- closed meshes with `:winding` return inside/outside signed distance.
+- open meshes with `:pseudonormal` return oriented side-of-curve / side-of-sheet signed distance.
+- open meshes do not define a global inside/outside region.
+
+Pseudonormal edge cases:
+- points exactly on the front return `0` distance.
+- near numerically ambiguous sign configurations, the sign may evaluate to `0` when the signing dot product is within tolerance.
+
+---
+
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md) for the v0.5 ambient signed-distance release summary.
 
 ---
 

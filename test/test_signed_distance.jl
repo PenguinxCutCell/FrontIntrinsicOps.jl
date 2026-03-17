@@ -191,3 +191,74 @@ end
     e3 = [abs(signed_distance(p, m3; sign_mode=:unsigned).distance - (norm(p) - 1.0)) for p in pts3d]
     @test mean(e3) < mean(e1)
 end
+
+@testset "Regression: sign semantics and dispatch" begin
+    open_curve = load_curve_points([SVector(-1.0, 0.0), SVector(1.0, 0.0)]; closed=false)
+    closed_curve = sample_circle(1.0, 64)
+
+    rc_top = signed_distance(SVector(0.0, 0.6), open_curve; sign_mode=:pseudonormal).distance
+    rc_bot = signed_distance(SVector(0.0, -0.6), open_curve; sign_mode=:pseudonormal).distance
+    @test rc_top * rc_bot < 0
+
+    ra_open = signed_distance(SVector(0.0, 0.6), open_curve; sign_mode=:auto).distance
+    rp_open = signed_distance(SVector(0.0, 0.6), open_curve; sign_mode=:pseudonormal).distance
+    @test isapprox(ra_open, rp_open; atol=1e-12)
+
+    ra_closed = signed_distance(SVector(0.0, 0.0), closed_curve; sign_mode=:auto).distance
+    rw_closed = signed_distance(SVector(0.0, 0.0), closed_curve; sign_mode=:winding).distance
+    @test isapprox(ra_closed, rw_closed; atol=1e-12)
+
+    err = try
+        signed_distance(SVector(0.0, 0.2), open_curve; sign_mode=:winding)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("inside/outside", sprint(showerror, err))
+    @test occursin(":pseudonormal", sprint(showerror, err))
+
+    tri = SurfaceMesh{Float64}(
+        [SVector(0.0, 0.0, 0.0), SVector(1.0, 0.0, 0.0), SVector(1.0, 1.0, 0.0), SVector(0.0, 1.0, 0.0)],
+        [SVector(1, 2, 3), SVector(1, 3, 4)],
+    )
+    rt = signed_distance(SVector(0.5, 0.5, 0.4), tri; sign_mode=:pseudonormal).distance
+    rb = signed_distance(SVector(0.5, 0.5, -0.4), tri; sign_mode=:pseudonormal).distance
+    @test rt * rb < 0
+
+    tetra_pts = [
+        SVector(0.0, 0.0, 0.0),
+        SVector(1.0, 0.0, 0.0),
+        SVector(0.0, 1.0, 0.0),
+        SVector(0.0, 0.0, 1.0),
+    ]
+    tetra_faces = [
+        SVector(1, 3, 2),
+        SVector(1, 2, 4),
+        SVector(2, 3, 4),
+        SVector(3, 1, 4),
+    ]
+    tet = SurfaceMesh{Float64}(tetra_pts, tetra_faces)
+    tet_flip = SurfaceMesh{Float64}(tetra_pts, [SVector{3,Int}(f[1], f[3], f[2]) for f in tetra_faces])
+    q = SVector(2.0, 2.0, 2.0)
+
+    s_unsigned = signed_distance(q, tet; sign_mode=:unsigned).distance
+    s_unsigned_flip = signed_distance(q, tet_flip; sign_mode=:unsigned).distance
+    @test isapprox(s_unsigned, s_unsigned_flip; atol=1e-12)
+
+    s_pseudo = signed_distance(q, tet; sign_mode=:pseudonormal).distance
+    s_pseudo_flip = signed_distance(q, tet_flip; sign_mode=:pseudonormal).distance
+    @test isapprox(s_pseudo, -s_pseudo_flip; atol=1e-12)
+
+    q_inside = SVector(0.1, 0.1, 0.1)
+    s_wind = signed_distance(q_inside, tet; sign_mode=:winding).distance
+    s_wind_flip = signed_distance(q_inside, tet_flip; sign_mode=:winding).distance
+    @test isapprox(s_wind, -s_wind_flip; atol=1e-12)
+
+    on_v = tri.points[1]
+    on_e = (tri.points[1] + tri.points[2]) / 2
+    on_f = (tri.points[1] + tri.points[2] + tri.points[3]) / 3
+    @test abs(signed_distance(on_v, tri; sign_mode=:pseudonormal).distance) ≤ 1e-12
+    @test abs(signed_distance(on_e, tri; sign_mode=:pseudonormal).distance) ≤ 1e-12
+    @test abs(signed_distance(on_f, tri; sign_mode=:pseudonormal).distance) ≤ 1e-12
+end

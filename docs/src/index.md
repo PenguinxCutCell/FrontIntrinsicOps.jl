@@ -4,6 +4,8 @@
 It implements intrinsic geometry, discrete exterior calculus (DEC), and a full suite of
 PDE solvers — all working directly on the surface without embedding into a bulk domain.
 
+Release summary for ambient signed distance is available in `CHANGELOG.md` (v0.5 section).
+
 ---
 
 ## Contents

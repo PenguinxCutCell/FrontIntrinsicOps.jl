@@ -13,6 +13,10 @@ S, I, C, N = signed_distance(pts, cache; sign_mode=:auto)
 println("Closed circle SDF stats: min=$(minimum(S)), max=$(maximum(S)), mean=$(mean(S))")
 println("Closest primitive id range: [$(minimum(I)), $(maximum(I))]")
 
+s_in = signed_distance(SVector(0.0, 0.0), cache; sign_mode=:winding).distance
+s_out = signed_distance(SVector(2.0, 0.0), cache; sign_mode=:winding).distance
+println("Reference signs (winding): inside=$s_in, outside=$s_out")
+
 @assert signed_distance(SVector(0.0, 0.0), cache; sign_mode=:winding).distance < 0
 @assert signed_distance(SVector(2.0, 0.0), cache; sign_mode=:winding).distance > 0
 @assert abs(signed_distance(SVector(1.0, 0.0), cache; sign_mode=:winding).distance) ≤ 1e-9

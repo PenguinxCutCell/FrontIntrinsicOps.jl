@@ -31,6 +31,15 @@ distance match brute force up to floating-point roundoff.
 If `sign_mode=:winding` is requested on an open mesh, an `ArgumentError` is
 thrown because inside/outside is not globally defined.
 
+Support summary:
+
+| Mesh type | `:pseudonormal` | `:winding` | `:unsigned` | `:auto` |
+|-----------|------------------|------------|-------------|---------|
+| Closed `CurveMesh` | ✓ | ✓ | ✓ | winding |
+| Open `CurveMesh` | ✓ | error | ✓ | pseudonormal |
+| Closed `SurfaceMesh` | ✓ | ✓ | ✓ | winding |
+| Open `SurfaceMesh` | ✓ | error | ✓ | pseudonormal |
+
 ## Pseudonormal sign
 
 Let $c$ be the closest point on the closest feature and $n_\ast$ the feature
@@ -46,6 +55,9 @@ This mode is valid on both open and closed meshes.
 - On closed meshes, it is an oriented signed distance near the surface.
 - On open meshes, it is a **side-of-sheet / side-of-curve** sign, not a global
   occupancy classification.
+- Points exactly on the front return zero distance.
+- Near numerically ambiguous configurations, if the signing dot-product is
+  within tolerance the sign can evaluate to zero.
 
 ## Winding sign
 

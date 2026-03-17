@@ -228,3 +228,56 @@ is_closed_surface(mesh::SurfaceMesh) -> Bool
 ```
 
 Closure predicates used by `sign_mode=:auto`.
+
+### Open-mesh sign semantics
+
+- Closed meshes with `sign_mode=:winding` provide inside/outside sign.
+- Open meshes with `sign_mode=:pseudonormal` provide oriented side sign.
+- Open meshes do not define a global inside/outside region.
+- In `:pseudonormal` mode, points on the front return distance `0`.
+- Near ambiguous configurations (signing dot-product within tolerance), the sign
+  can evaluate to `0`.
+
+### Short examples
+
+Closed 2D curve:
+
+```julia
+mesh = sample_circle(1.0, 128)
+cache = build_signed_distance_cache(mesh)
+r_in  = signed_distance(SVector(0.0, 0.0), cache; sign_mode=:winding)
+r_out = signed_distance(SVector(2.0, 0.0), cache; sign_mode=:winding)
+# r_in.distance < 0, r_out.distance > 0
+```
+
+Open 2D curve:
+
+```julia
+mesh = load_curve_points([SVector(-1.0, 0.0), SVector(1.0, 0.0)]; closed=false)
+cache = build_signed_distance_cache(mesh)
+r_up = signed_distance(SVector(0.0, 0.5), cache; sign_mode=:pseudonormal)
+r_dn = signed_distance(SVector(0.0, -0.5), cache; sign_mode=:pseudonormal)
+# opposite signs across the oriented curve
+```
+
+Closed 3D surface:
+
+```julia
+mesh = generate_icosphere(1.0, 2)
+cache = build_signed_distance_cache(mesh)
+r_in  = signed_distance(SVector(0.0, 0.0, 0.0), cache; sign_mode=:winding)
+r_out = signed_distance(SVector(2.0, 0.0, 0.0), cache; sign_mode=:winding)
+# r_in.distance < 0, r_out.distance > 0
+```
+
+Open 3D patch:
+
+```julia
+pts = [SVector(0.0,0.0,0.0), SVector(1.0,0.0,0.0), SVector(1.0,1.0,0.0), SVector(0.0,1.0,0.0)]
+faces = [SVector(1,2,3), SVector(1,3,4)]
+mesh = SurfaceMesh{Float64}(pts, faces)
+cache = build_signed_distance_cache(mesh)
+r_top = signed_distance(SVector(0.5,0.5,0.3), cache; sign_mode=:pseudonormal)
+r_bot = signed_distance(SVector(0.5,0.5,-0.3), cache; sign_mode=:pseudonormal)
+# opposite signs across the oriented sheet
+```

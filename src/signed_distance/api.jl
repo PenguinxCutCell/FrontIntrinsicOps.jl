@@ -91,6 +91,16 @@ Returns `(S, I, C, N)` where:
 - `I`: closest primitive ids,
 - `C`: closest points,
 - `N`: signing normals used by pseudonormal mode (zero in other modes).
+
+Sign semantics:
+- closed mesh + `:winding`: inside/outside sign,
+- open mesh + `:pseudonormal`: oriented side-of-curve/sheet sign,
+- open meshes do not define global inside/outside.
+
+Notes:
+- points on the front return `0` distance in `:pseudonormal` mode,
+- near numerically ambiguous sign configurations, `:pseudonormal` may return
+    zero sign when the signing dot product is within tolerance.
 """
 function signed_distance(
     points::AbstractVector{SVector{N,T}},
