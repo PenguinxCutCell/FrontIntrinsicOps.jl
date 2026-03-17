@@ -73,4 +73,12 @@ include("test_helpers.jl")
     @testset "Allocations v0.4" begin
         include("test_allocations_v04.jl")
     end
+
+    if Base.find_package("Makie") !== nothing && Base.find_package("CairoMakie") !== nothing
+        @testset "Makie extension" begin
+            include("test_makie_ext.jl")
+        end
+    else
+        @info "Skipping Makie extension tests (Makie/CairoMakie not available in test env)."
+    end
 end

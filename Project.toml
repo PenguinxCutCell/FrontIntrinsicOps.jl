@@ -11,9 +11,16 @@ MeshIO = "7269a6da-0436-5bbc-96c2-40638cbb6118"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
+[weakdeps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+
+[extensions]
+MakieExt = "Makie"
+
 [compat]
 FileIO = "1"
 GeometryBasics = "0.4, 0.5"
+Makie = "0.21, 0.22, 0.23, 0.24"
 MeshIO = "0.4, 0.5"
 SparseArrays = "1"
 StaticArrays = "1"

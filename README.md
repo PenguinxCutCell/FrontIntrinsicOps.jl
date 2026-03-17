@@ -12,6 +12,23 @@ Those belong in separate packages.
 
 ---
 
+## Optional Makie support
+
+Plotting is provided via a weak `Makie` extension (`ext/MakieExt.jl`).
+Load any Makie backend (for example `CairoMakie`) to enable plotting helpers.
+
+```julia
+using CairoMakie
+using FrontIntrinsicOps
+
+set_makie_theme!()
+mesh = sample_circle(1.0, 128)
+fig, ax, p = plot_front(mesh; show_vertices=true)
+save("curve.png", fig)
+```
+
+---
+
 ## Scope
 
 ### What is implemented (v0.3)

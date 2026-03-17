@@ -18,6 +18,7 @@ makedocs(
             "Generators" => "generators.md",
             "Geometry" => "geometry.md",
             "PDEs" => "pdes.md",
+            "Plotting with Makie" => "plotting.md",
         ],
         "Math" => [
             "Mesh Types" => "01_mesh_types.md",

@@ -85,6 +85,7 @@ include("transport_highres.jl")
 include("open_surfaces.jl")
 include("cache.jl")
 include("performance.jl")
+include("plotting_stubs.jl")
 
 # Public API
 
@@ -274,6 +275,16 @@ export
     apply_mass_inplace!,
     apply_laplace_inplace!,
     l2_norm_cached,
-    energy_norm_cached
+    energy_norm_cached,
+
+    # Optional Makie plotting API (implemented in ext/MakieExt.jl)
+    makie_theme,
+    set_makie_theme!,
+    plot_front,
+    plot_normals,
+    plot_wireframe,
+    plot_vertices,
+    plot_faces,
+    boundingbox_limits
 
 end # module FrontIntrinsicOps

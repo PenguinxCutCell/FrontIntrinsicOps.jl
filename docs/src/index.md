@@ -42,6 +42,7 @@ Concise function signatures and descriptions:
 | [Geometry and DEC](geometry.md) | `compute_geometry`, `build_dec`, Hodge stars |
 | [PDE solvers](pdes.md) | Diffusion, transport, reaction–diffusion, open surfaces |
 | [Diagnostics](diagnostics.md) | `check_mesh`, `check_dec`, Gauss–Bonnet, `star1_sign_report` |
+| [Plotting with Makie](plotting.md) | Optional weak-extension plotting for `CurveMesh` / `SurfaceMesh` |
 
 ### Tutorials
 
