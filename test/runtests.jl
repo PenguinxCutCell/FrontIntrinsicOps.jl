@@ -73,6 +73,9 @@ include("test_helpers.jl")
     @testset "Allocations v0.4" begin
         include("test_allocations_v04.jl")
     end
+    @testset "Ambient signed distance" begin
+        include("test_signed_distance.jl")
+    end
 
     if Base.find_package("Makie") !== nothing && Base.find_package("CairoMakie") !== nothing
         @testset "Makie extension" begin

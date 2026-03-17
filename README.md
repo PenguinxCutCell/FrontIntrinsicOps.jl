@@ -61,6 +61,7 @@ save("curve.png", fig)
 | **Scalar surface transport** (FE, SSP-RK2/3, upwind/centered) | ✓ v0.3 |
 | **Surface advection–diffusion IMEX** | ✓ v0.3 |
 | **Convergence scripts** | ✓ v0.3 |
+| **Ambient exact signed-distance queries (curve/surface)** | ✓ v0.5 |
 
 ### What is deliberately not implemented
 
@@ -206,6 +207,34 @@ for _ in 2:100
                                                     factorization      = fac)
 end
 ```
+
+### Ambient signed-distance queries (v0.5)
+
+```julia
+using FrontIntrinsicOps, StaticArrays
+
+mesh  = generate_icosphere(1.0, 2)
+cache = build_signed_distance_cache(mesh)
+
+q = SVector(0.2, 0.1, 0.0)
+r = signed_distance(q, cache; sign_mode=:auto)
+println("distance = ", r.distance)
+println("closest face id = ", r.primitive)
+println("closest point = ", r.closest)
+
+# batched query (Vector{SVector})
+pts = [SVector(0.0, 0.0, 0.0), SVector(1.7, 0.0, 0.0)]
+S, I, C, N = signed_distance(pts, cache; sign_mode=:winding)
+```
+
+Sign modes:
+- `:unsigned` – always returns positive distance.
+- `:pseudonormal` – valid for open and closed meshes (oriented side sign).
+- `:winding` – valid for closed oriented meshes only (inside/outside sign).
+- `:auto` – uses `:winding` on closed meshes, otherwise `:pseudonormal`.
+
+For open meshes, signed distance represents **oriented side-of-curve/sheet** and
+is not a global inside/outside classification.
 
 ---
 

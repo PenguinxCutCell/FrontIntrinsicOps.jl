@@ -86,6 +86,16 @@ include("open_surfaces.jl")
 include("cache.jl")
 include("performance.jl")
 include("plotting_stubs.jl")
+include("signed_distance/types.jl")
+include("signed_distance/primitives2d.jl")
+include("signed_distance/primitives3d.jl")
+include("signed_distance/aabb.jl")
+include("signed_distance/pseudonormals2d.jl")
+include("signed_distance/pseudonormals3d.jl")
+include("signed_distance/winding2d.jl")
+include("signed_distance/winding3d.jl")
+include("signed_distance/query.jl")
+include("signed_distance/api.jl")
 
 # Public API
 
@@ -276,6 +286,16 @@ export
     apply_laplace_inplace!,
     l2_norm_cached,
     energy_norm_cached,
+
+    # Ambient signed-distance queries
+    SignedDistanceCache,
+    AABBNode,
+    build_signed_distance_cache,
+    signed_distance,
+    unsigned_distance,
+    winding_number,
+    is_closed_curve,
+    is_closed_surface,
 
     # Optional Makie plotting API (implemented in ext/MakieExt.jl)
     makie_theme,

@@ -30,6 +30,7 @@ Detailed derivations and formulas for every module:
 | [Open surfaces and boundary conditions](14_open_surfaces.md) | Boundary detection, Dirichlet, Neumann |
 | [Caching and performance](15_caching.md) | `SurfacePDECache`, in-place buffers, zero-allocation kernels |
 | [Mesh generators](16_generators.md) | UV-sphere, icosphere, torus, ellipsoid, perturbed sphere |
+| [Ambient signed distance](17_signed_distance.md) | Exact point-to-front distance, pseudonormal vs winding sign |
 
 ### API Reference
 

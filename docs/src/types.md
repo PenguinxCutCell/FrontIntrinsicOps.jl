@@ -161,3 +161,70 @@ Build with `alloc_diffusion_buffers(nv)` or `alloc_rd_buffers(nv)`.
 - [Mesh types (math)](01_mesh_types.md)
 - [Discrete exterior calculus (math)](04_dec.md)
 - [Caching and performance (math)](15_caching.md)
+
+---
+
+## Ambient signed-distance API (v0.5)
+
+### `build_signed_distance_cache`
+
+```julia
+build_signed_distance_cache(mesh; leafsize=8) -> SignedDistanceCache
+```
+
+Builds an exact nearest-primitive acceleration cache (AABB tree + sign data)
+for `CurveMesh` and `SurfaceMesh`.
+
+### `signed_distance` (batched)
+
+```julia
+signed_distance(points, mesh_or_cache;
+                sign_mode=:auto,
+                lower_bound=0.0,
+                upper_bound=Inf,
+                return_normals=true)
+```
+
+Accepted `points` formats:
+- `Vector{SVector{N,T}}`
+- `Matrix{T}` with shape `(N,np)` or `(np,N)`
+
+Returns `(S, I, C, N)`:
+- `S`: signed distances,
+- `I`: closest primitive ids,
+- `C`: closest points,
+- `N`: signing normals (pseudonormal mode).
+
+### `signed_distance` (scalar)
+
+```julia
+signed_distance(point::SVector{N,T}, mesh_or_cache; sign_mode=:auto)
+```
+
+Returns named tuple `(distance, primitive, closest, normal)`.
+
+### `unsigned_distance`
+
+```julia
+unsigned_distance(points, mesh_or_cache)
+```
+
+Convenience wrapper for `signed_distance(...; sign_mode=:unsigned)`.
+
+### `winding_number`
+
+```julia
+winding_number(point, mesh_or_cache)
+```
+
+- Closed 2D curve: integer winding number.
+- Closed 3D oriented surface: normalized solid-angle winding number.
+
+### `is_closed_curve` and `is_closed_surface`
+
+```julia
+is_closed_curve(mesh::CurveMesh) -> Bool
+is_closed_surface(mesh::SurfaceMesh) -> Bool
+```
+
+Closure predicates used by `sign_mode=:auto`.

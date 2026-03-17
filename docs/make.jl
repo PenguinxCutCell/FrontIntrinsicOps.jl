@@ -37,6 +37,7 @@ makedocs(
             "Open Surfaces" => "14_open_surfaces.md",
             "Caching" => "15_caching.md",
             "Generators" => "16_generators.md",
+            "Ambient Signed Distance" => "17_signed_distance.md",
         ],
         "Tutorials" => [
             "Getting Started" => "01_getting_started.md",
