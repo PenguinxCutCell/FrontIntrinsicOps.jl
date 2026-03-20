@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Transport · FrontIntrinsicOps.jl</title><meta name="title" content="Transport · FrontIntrinsicOps.jl"/><meta property="og:title" content="Transport · FrontIntrinsicOps.jl"/><meta property="twitter:title" content="Transport · FrontIntrinsicOps.jl"/><meta name="description" content="Documentation for FrontIntrinsicOps.jl."/><meta property="og:description" content="Documentation for FrontIntrinsicOps.jl."/><meta property="twitter:description" content="Documentation for FrontIntrinsicOps.jl."/><meta property="og:url" content="https://PenguinxCutCell.github.io/FrontIntrinsicOps.jl/03_transport/"/><meta property="twitter:url" content="https://PenguinxCutCell.github.io/FrontIntrinsicOps.jl/03_transport/"/><link rel="canonical" href="https://PenguinxCutCell.github.io/FrontIntrinsicOps.jl/03_transport/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">FrontIntrinsicOps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../types/">API Documentation</a></li><li><a class="tocitem" href="../diagnostics/">Diagnostics</a></li><li><a class="tocitem" href="../generators/">Generators</a></li><li><a class="tocitem" href="../geometry/">Geometry</a></li><li><a class="tocitem" href="../pdes/">PDEs</a></li><li><a class="tocitem" href="../plotting/">Plotting with Makie</a></li></ul></li><li><span class="tocitem">Math</span><ul><li><a class="tocitem" href="../01_mesh_types/">Mesh Types</a></li><li><a class="tocitem" href="../02_topology/">Topology</a></li><li><a class="tocitem" href="../03_geometry/">Geometry</a></li><li><a class="tocitem" href="../04_dec/">Discretization</a></li><li><a class="tocitem" href="../05_laplace_beltrami/">Laplace-Beltrami</a></li><li><a class="tocitem" href="../06_curvature/">Curvature</a></li><li><a class="tocitem" href="../07_surface_diffusion/">Surface Diffusion</a></li><li><a class="tocitem" href="../08_transport/">Transport</a></li><li><a class="tocitem" href="../09_advection_diffusion/">Advection-Diffusion</a></li><li><a class="tocitem" href="../10_reaction_diffusion/">Reaction-Diffusion</a></li><li><a class="tocitem" href="../11_vector_calculus/">Vector Calculus</a></li><li><a class="tocitem" href="../12_hodge_decomposition/">Hodge Decomposition</a></li><li><a class="tocitem" href="../13_highres_transport/">High-Resolution Transport</a></li><li><a class="tocitem" href="../14_open_surfaces/">Open Surfaces</a></li><li><a class="tocitem" href="../15_caching/">Caching</a></li><li><a class="tocitem" href="../16_generators/">Generators</a></li><li><a class="tocitem" href="../17_signed_distance/">Ambient Signed Distance</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../01_getting_started/">Getting Started</a></li><li><a class="tocitem" href="../02_surface_diffusion/">Surface Diffusion</a></li><li class="is-active"><a class="tocitem" href>Transport</a><ul class="internal"><li><a class="tocitem" href="#Problem-setup"><span>Problem setup</span></a></li><li><a class="tocitem" href="#Code"><span>Code</span></a></li><li><a class="tocitem" href="#Running-the-simulation"><span>Running the simulation</span></a></li><li><a class="tocitem" href="#Error-analysis"><span>Error analysis</span></a></li><li><a class="tocitem" href="#Mass-conservation"><span>Mass conservation</span></a></li><li><a class="tocitem" href="#Using-van-Leer-limiter-(v0.4)"><span>Using van Leer limiter (v0.4)</span></a></li><li><a class="tocitem" href="#Convergence-rate-study"><span>Convergence rate study</span></a></li><li><a class="tocitem" href="#See-also"><span>See also</span></a></li></ul></li><li><a class="tocitem" href="../04_reaction_diffusion/">Reaction-Diffusion</a></li><li><a class="tocitem" href="../05_hodge_decomposition/">Hodge Decomposition</a></li><li><a class="tocitem" href="../06_open_surfaces/">Open Surfaces</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Transport</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Transport</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/PenguinxCutCell/FrontIntrinsicOps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-3:-Scalar-Transport"><a class="docs-heading-anchor" href="#Tutorial-3:-Scalar-Transport">Tutorial 3: Scalar Transport</a><a id="Tutorial-3:-Scalar-Transport-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial-3:-Scalar-Transport" title="Permalink"></a></h1><p>This tutorial transports a scalar field on the sphere by a rigid rotation velocity, using the SSP-RK3 time integrator with upwind and centered spatial schemes.</p><h2 id="Problem-setup"><a class="docs-heading-anchor" href="#Problem-setup">Problem setup</a><a id="Problem-setup-1"></a><a class="docs-heading-anchor-permalink" href="#Problem-setup" title="Permalink"></a></h2><p>Rigid rotation on the unit sphere:</p><p class="math-container">\[v(x,y,z) = (-y,\, x,\, 0)\]</p><p>This is tangential to the sphere and <strong>divergence-free</strong> (so the integral of <span>$u$</span> is conserved).</p><p>Initial condition: <span>$u_0 = z$</span> (the height function).</p><p>Exact solution after time <span>$T$</span>: <span>$u(x,y,z,T) = z\cos T + \sqrt{x^2+y^2}\sin T$</span> (field rotated by angle <span>$T$</span> around the <span>$z$</span>-axis).</p><h2 id="Code"><a class="docs-heading-anchor" href="#Code">Code</a><a id="Code-1"></a><a class="docs-heading-anchor-permalink" href="#Code" title="Permalink"></a></h2><pre><code class="language-julia hljs">using FrontIntrinsicOps, StaticArrays
+
+R    = 1.0
+mesh = generate_icosphere(R, 4)
+geom = compute_geometry(mesh)
+dec  = build_dec(mesh, geom)
+
+# Velocity field: rigid rotation v = (-y, x, 0)
+vel = SVector{3,Float64}[SVector(-p[2], p[1], 0.0) for p in mesh.points]
+
+# Initial condition
+u  = Float64[p[3] for p in mesh.points]
+u0 = copy(u)
+
+# CFL time step
+dt = estimate_transport_dt(mesh, geom, vel; cfl=0.5)
+println(&quot;dt = $dt&quot;)
+
+# Assemble transport operator (constant velocity)
+A_up  = assemble_transport_operator(mesh, geom, vel; scheme=:upwind)
+A_cen = assemble_transport_operator(mesh, geom, vel; scheme=:centered)</code></pre><h2 id="Running-the-simulation"><a class="docs-heading-anchor" href="#Running-the-simulation">Running the simulation</a><a id="Running-the-simulation-1"></a><a class="docs-heading-anchor-permalink" href="#Running-the-simulation" title="Permalink"></a></h2><pre><code class="language-julia hljs">T_final = 0.5          # rotate by 0.5 radian
+N = round(Int, T_final / dt)
+dt = T_final / N       # adjust so we hit T_final exactly
+
+# Upwind + SSP-RK3
+u_up = copy(u)
+for _ in 1:N
+    u_up = step_surface_transport_ssprk3(mesh, geom, A_up, u_up, dt)
+end
+
+# Centered + SSP-RK3
+u_cn = copy(u)
+for _ in 1:N
+    u_cn = step_surface_transport_ssprk3(mesh, geom, A_cen, u_cn, dt)
+end</code></pre><h2 id="Error-analysis"><a class="docs-heading-anchor" href="#Error-analysis">Error analysis</a><a id="Error-analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Error-analysis" title="Permalink"></a></h2><pre><code class="language-julia hljs"># Exact solution: rotate u₀ by T_final around z-axis
+# For the field u₀ = z: exact solution is still z (z is rotation-invariant!)
+u_exact = Float64[p[3] for p in mesh.points]   # z is unchanged by z-rotation
+
+err_up  = maximum(abs, u_up  .- u_exact)
+err_cen = maximum(abs, u_cn  .- u_exact)
+
+println(&quot;Upwind error:   $err_up&quot;)
+println(&quot;Centered error: $err_cen&quot;)</code></pre><p><strong>Note:</strong> Since <span>$u_0 = z$</span> is invariant under rotation around the <span>$z$</span>-axis, the exact solution is <span>$u(T) = z$</span> exactly.  Any error is purely numerical.</p><h2 id="Mass-conservation"><a class="docs-heading-anchor" href="#Mass-conservation">Mass conservation</a><a id="Mass-conservation-1"></a><a class="docs-heading-anchor-permalink" href="#Mass-conservation" title="Permalink"></a></h2><pre><code class="language-julia hljs">mass0  = sum(geom.vertex_dual_areas .* u0)
+mass_up  = sum(geom.vertex_dual_areas .* u_up)
+mass_cen = sum(geom.vertex_dual_areas .* u_cn)
+
+println(&quot;Initial mass:         $mass0&quot;)
+println(&quot;Upwind mass drift:    &quot;, abs(mass_up  - mass0))
+println(&quot;Centered mass drift:  &quot;, abs(mass_cen - mass0))
+# Both should be &lt; 1e-12 (machine precision)</code></pre><h2 id="Using-van-Leer-limiter-(v0.4)"><a class="docs-heading-anchor" href="#Using-van-Leer-limiter-(v0.4)">Using van Leer limiter (v0.4)</a><a id="Using-van-Leer-limiter-(v0.4)-1"></a><a class="docs-heading-anchor-permalink" href="#Using-van-Leer-limiter-(v0.4)" title="Permalink"></a></h2><pre><code class="language-julia hljs">topo = build_topology(mesh)
+u_vl = copy(u)
+
+for _ in 1:N
+    u_vl = step_surface_transport_limited(mesh, geom, dec, topo, u_vl, vel, dt;
+                                           limiter=:van_leer, method=:ssprk2)
+end
+
+err_vl = maximum(abs, u_vl .- u_exact)
+println(&quot;Van Leer error: $err_vl&quot;)</code></pre><h2 id="Convergence-rate-study"><a class="docs-heading-anchor" href="#Convergence-rate-study">Convergence rate study</a><a id="Convergence-rate-study-1"></a><a class="docs-heading-anchor-permalink" href="#Convergence-rate-study" title="Permalink"></a></h2><pre><code class="language-julia hljs">levels = [2, 3, 4, 5]
+errors = Float64[]
+
+for level in levels
+    m  = generate_icosphere(1.0, level)
+    g  = compute_geometry(m)
+    v  = SVector{3,Float64}[SVector(-p[2], p[1], 0.0) for p in m.points]
+    u0 = Float64[p[3] for p in m.points]
+
+    A  = assemble_transport_operator(m, g, v; scheme=:upwind)
+    dt_cfl = estimate_transport_dt(m, g, v; cfl=0.5)
+    N_steps = round(Int, T_final / dt_cfl)
+    dt_step = T_final / N_steps
+
+    u_k = copy(u0)
+    for _ in 1:N_steps
+        u_k = step_surface_transport_ssprk3(m, g, A, u_k, dt_step)
+    end
+
+    u_ex = Float64[p[3] for p in m.points]
+    push!(errors, maximum(abs, u_k .- u_ex))
+end
+
+# Print convergence table
+println(&quot;Level  N_V    L∞ error&quot;)
+for (i, level) in enumerate(levels)
+    nv = 12 * 4^level - 2 * 2^level + 2 # rough formula
+    println(&quot;$level      $nv    $(errors[i])&quot;)
+end</code></pre><p>Expected convergence: upwind scheme achieves approximately <span>$O(h^1)$</span> in <span>$L^\infty$</span>.</p><h2 id="See-also"><a class="docs-heading-anchor" href="#See-also">See also</a><a id="See-also-1"></a><a class="docs-heading-anchor-permalink" href="#See-also" title="Permalink"></a></h2><ul><li><a href="../01_getting_started/">Getting started</a></li><li><a href="../08_transport/">Math: Scalar transport</a></li><li><a href="../13_highres_transport/">Math: High-resolution transport</a></li><li><a href="../pdes/">API: PDE solvers</a></li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../02_surface_diffusion/">« Surface Diffusion</a><a class="docs-footer-nextpage" href="../04_reaction_diffusion/">Reaction-Diffusion »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 20 March 2026 14:18">Friday 20 March 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
