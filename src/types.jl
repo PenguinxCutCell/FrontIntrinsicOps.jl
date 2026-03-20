@@ -47,6 +47,73 @@ struct SurfaceMesh{T<:AbstractFloat}
     faces  :: Vector{SVector{3,Int}}
 end
 
+"""
+    PointFront1D{T<:Real}
+
+Minimal 1-D front representation on a line.
+
+Fields
+------
+- `x :: Vector{T}` – marker positions (exactly one or two values).
+- `interval_is_inside :: Bool` – inside-region convention:
+  - one marker `x[1]`:
+    - `true`: inside is to the right (`x >= x[1]`)
+    - `false`: inside is to the left (`x <= x[1]`)
+  - two markers `(x[1], x[2])`:
+    - `true`: inside is the interval `[x[1], x[2]]`
+    - `false`: inside is the exterior of that interval
+
+Invariants
+----------
+- `length(x) in (1, 2)`
+- all coordinates finite
+- for two markers: strict ordering `x[1] < x[2]` (no duplicates)
+
+This type intentionally stores only marker positions and inside/outside
+semantics; it does not encode connectivity, tangents, or DEC topology.
+"""
+struct PointFront1D{T<:Real}
+    x::Vector{T}
+    interval_is_inside::Bool
+    function PointFront1D{T}(x::Vector{T}, interval_is_inside::Bool) where {T<:Real}
+        x_checked = _validate_point_front1d_markers(x)
+        return new{T}(x_checked, interval_is_inside)
+    end
+end
+
+function PointFront1D(x::AbstractVector{<:Real}, interval_is_inside::Bool=true)
+    x_raw = collect(x)
+    n = length(x_raw)
+    (n == 1 || n == 2) || throw(ArgumentError("PointFront1D requires exactly 1 or 2 markers, got $n."))
+
+    T = typeof(float(x_raw[1]))
+    for i in 2:n
+        T = promote_type(T, typeof(float(x_raw[i])))
+    end
+
+    x_typed = Vector{T}(undef, n)
+    @inbounds for i in 1:n
+        x_typed[i] = T(x_raw[i])
+    end
+    return PointFront1D{T}(x_typed, interval_is_inside)
+end
+
+function _validate_point_front1d_markers(x::AbstractVector{T}) where {T<:Real}
+    n = length(x)
+    (n == 1 || n == 2) || throw(ArgumentError("PointFront1D requires exactly 1 or 2 markers, got $n."))
+
+    x_checked = collect(x)
+    all(isfinite, x_checked) || throw(ArgumentError("PointFront1D markers must be finite real values."))
+
+    if n == 2
+        x_checked[1] < x_checked[2] || throw(ArgumentError("PointFront1D with two markers requires strict ordering x[1] < x[2]."))
+    end
+
+    # Keep storage explicitly sorted to preserve a strong invariant.
+    sort!(x_checked)
+    return x_checked
+end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Geometry containers
 # ─────────────────────────────────────────────────────────────────────────────

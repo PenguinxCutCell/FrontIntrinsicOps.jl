@@ -70,6 +70,7 @@ include("curvature.jl")
 include("integrals.jl")
 include("checks.jl")
 include("generators.jl")
+include("signed_distance_1d.jl")
 # v0.3: PDE layer and k-form operators
 include("surface_pdes_common.jl")
 include("surface_diffusion.jl")
@@ -107,6 +108,7 @@ export
     SurfaceGeometry,
     CurveDEC,
     SurfaceDEC,
+    PointFront1D,
 
     # IO
     load_surface_stl,
@@ -120,6 +122,8 @@ export
     generate_torus,
     generate_ellipsoid,
     generate_perturbed_sphere,
+    single_marker_front,
+    interval_front,
 
     # Topology
     MeshTopology,
@@ -292,6 +296,8 @@ export
     AABBNode,
     build_signed_distance_cache,
     signed_distance,
+    rebuild_signed_distance,
+    interface_normals,
     unsigned_distance,
     winding_number,
     is_closed_curve,

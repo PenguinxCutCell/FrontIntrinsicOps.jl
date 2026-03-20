@@ -1,5 +1,10 @@
 # FrontIntrinsicOps.jl
 
+[![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://PenguinxCutCell.github.io/FrontIntrinsicOps.jl/dev)
+![CI](https://github.com/PenguinxCutCell/FrontIntrinsicOps.jl/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/PenguinxCutCell/FrontIntrinsicOps.jl/branch/main/graph/badge.svg)
+
+
 A **static interface-geometry / DDG / DEC package** for triangulated front meshes.
 
 `FrontIntrinsicOps.jl` computes intrinsic geometric quantities and intrinsic
@@ -76,6 +81,22 @@ save("curve.png", fig)
 | `sign_mode=:pseudonormal` | ✓ |
 | `sign_mode=:winding` (closed meshes only) | ✓ |
 | `sign_mode=:unsigned` | ✓ |
+
+### 1D point fronts
+
+`FrontIntrinsicOps.jl` also provides a lightweight 1-D front primitive for
+downstream front-tracking / Stefan coupling:
+
+- one marker `xΓ` (half-line split),
+- or two markers `(xL, xR)` defining a bounded interval,
+- with explicit inside/outside semantics and `signed_distance` convention
+  `φ < 0` inside, `φ > 0` outside.
+
+This 1-D support is intentionally minimal:
+
+- no 1-D DEC operators,
+- no 1-D PDE operators,
+- no general 1-D graph/topology framework.
 
 ### What is deliberately not implemented
 
@@ -616,4 +637,3 @@ julia --project -e "using Pkg; Pkg.test()"
 ## License
 
 MIT
-

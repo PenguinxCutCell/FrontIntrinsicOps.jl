@@ -76,6 +76,9 @@ include("test_helpers.jl")
     @testset "Ambient signed distance" begin
         include("test_signed_distance.jl")
     end
+    @testset "1D point fronts" begin
+        include("test_1d_front.jl")
+    end
 
     if Base.find_package("Makie") !== nothing && Base.find_package("CairoMakie") !== nothing
         @testset "Makie extension" begin

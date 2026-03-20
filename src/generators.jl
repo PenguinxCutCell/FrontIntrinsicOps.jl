@@ -16,6 +16,35 @@
 # * `generate_ellipsoid(a, b, c, nphi, ntheta)` – axis-aligned ellipsoid.
 # * `generate_perturbed_sphere(R, ε, k, nphi, ntheta)` – bumpy sphere.
 
+"""
+    single_marker_front(xΓ; inside_right=true) -> PointFront1D
+
+Construct a one-marker 1-D front at `xΓ`.
+
+Convention:
+- `inside_right=true`  => inside is `x >= xΓ`
+- `inside_right=false` => inside is `x <= xΓ`
+"""
+function single_marker_front(xΓ::Real; inside_right::Bool=true)
+    T = float(typeof(xΓ))
+    return PointFront1D(T[T(xΓ)], inside_right)
+end
+
+"""
+    interval_front(xL, xR; interval_is_inside=true) -> PointFront1D
+
+Construct a two-marker 1-D front with markers `(xL, xR)`.
+
+Requires strict ordering `xL < xR`.
+"""
+function interval_front(xL::Real, xR::Real; interval_is_inside::Bool=true)
+    T = promote_type(float(typeof(xL)), float(typeof(xR)))
+    xLt = T(xL)
+    xRt = T(xR)
+    xLt < xRt || throw(ArgumentError("interval_front requires xL < xR, got xL=$xL and xR=$xR."))
+    return PointFront1D(T[xLt, xRt], interval_is_inside)
+end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Curve generators
 # ─────────────────────────────────────────────────────────────────────────────

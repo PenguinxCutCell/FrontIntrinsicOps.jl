@@ -27,6 +27,29 @@ SurfaceMesh{T <: AbstractFloat}
 
 ---
 
+## `PointFront1D{T}`
+
+Minimal 1-D front on a line (standalone from mesh/DEC machinery).
+
+```julia
+PointFront1D{T <: Real}
+  x                  :: Vector{T}  # marker positions (length 1 or 2)
+  interval_is_inside :: Bool
+```
+
+Semantics:
+- `length(x) == 1`:
+  - `interval_is_inside=true`: inside is to the right (`x >= xΓ`)
+  - `interval_is_inside=false`: inside is to the left (`x <= xΓ`)
+- `length(x) == 2` with strict ordering `x[1] < x[2]`:
+  - `interval_is_inside=true`: inside is `[x[1], x[2]]`
+  - `interval_is_inside=false`: inside is the exterior of `[x[1], x[2]]`
+
+Invariants are validated at construction (`1` or `2` markers only, finite
+coordinates, strict ordering for two markers).
+
+---
+
 ## `CurveGeometry{T}`
 
 Pre-computed intrinsic geometry of a `CurveMesh`.
@@ -228,6 +251,17 @@ is_closed_surface(mesh::SurfaceMesh) -> Bool
 ```
 
 Closure predicates used by `sign_mode=:auto`.
+
+### 1-D point-front signed distance
+
+```julia
+signed_distance(front::PointFront1D, x::Real)
+signed_distance(front::PointFront1D, xs::AbstractVector)
+rebuild_signed_distance(front::PointFront1D, xnodes::AbstractVector)
+interface_normals(front::PointFront1D)
+```
+
+Sign convention is the same: negative inside, positive outside, zero on marker(s).
 
 ### Open-mesh sign semantics
 

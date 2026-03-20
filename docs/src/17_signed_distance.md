@@ -2,6 +2,35 @@
 
 This page documents the ambient signed-distance layer in `FrontIntrinsicOps.jl`.
 
+## Minimal 1-D point fronts
+
+In addition to ambient curve/surface queries, the package provides a minimal
+1-D front primitive `PointFront1D` with exactly two supported configurations:
+
+- one marker `xΓ`,
+- two markers `(xL, xR)` with `xL < xR`.
+
+Sign convention matches the ambient API:
+- inside: negative distance,
+- outside: positive distance,
+- interface marker(s): zero.
+
+The helper API is:
+
+```julia
+signed_distance(front::PointFront1D, x::Real)
+signed_distance(front::PointFront1D, xs::AbstractVector)
+rebuild_signed_distance(front::PointFront1D, xnodes::AbstractVector)
+interface_normals(front::PointFront1D)
+```
+
+`interface_normals` returns outward normal orientation(s) of the inside region:
+- one marker: `[+1]` (inside right) or `[-1]` (inside left),
+- two markers: `[-1, +1]` (interval inside) or `[+1, -1]` (interval outside).
+
+This 1-D support is intentionally lightweight and does not include 1-D DEC,
+1-D PDE operators, or general 1-D graph topology machinery.
+
 ## Problem definition
 
 Given a point $q \in \mathbb{R}^N$ and a piecewise-linear front mesh $\Gamma_h$:

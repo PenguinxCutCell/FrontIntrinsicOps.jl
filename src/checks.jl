@@ -1,6 +1,21 @@
 # checks.jl – Mesh and DEC diagnostics.
 
 """
+    check(front::PointFront1D) -> Bool
+
+Validate invariants of a minimal 1-D point front.
+
+Checks:
+- exactly 1 or 2 markers,
+- finite marker coordinates,
+- for 2 markers: strict ordering `x[1] < x[2]`.
+"""
+function check(front::PointFront1D) :: Bool
+    _validate_point_front1d_markers(front.x)
+    return true
+end
+
+"""
     check_mesh(mesh::CurveMesh) -> NamedTuple
 
 Run structural diagnostics on a curve mesh and return a named tuple report.

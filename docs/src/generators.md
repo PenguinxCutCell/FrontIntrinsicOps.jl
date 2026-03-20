@@ -23,6 +23,30 @@ origin in the $xy$-plane.
 
 ---
 
+## 1-D point-front helpers
+
+### `single_marker_front`
+
+```julia
+single_marker_front(xΓ; inside_right=true) -> PointFront1D
+```
+
+Create a one-marker front at `xΓ`.
+- `inside_right=true`: inside is `x >= xΓ`
+- `inside_right=false`: inside is `x <= xΓ`
+
+### `interval_front`
+
+```julia
+interval_front(xL, xR; interval_is_inside=true) -> PointFront1D
+```
+
+Create a two-marker front with strict ordering `xL < xR`.
+- `interval_is_inside=true`: inside is `[xL, xR]`
+- `interval_is_inside=false`: inside is exterior to `[xL, xR]`
+
+---
+
 ## Surfaces — sphere variants
 
 ### `generate_uvsphere`
