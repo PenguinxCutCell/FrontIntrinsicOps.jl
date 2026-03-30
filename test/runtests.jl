@@ -67,6 +67,9 @@ include("test_helpers.jl")
     @testset "Open surfaces" begin
         include("test_open_surfaces.jl")
     end
+    @testset "Open curves" begin
+        include("test_open_curves.jl")
+    end
     @testset "PDE cache" begin
         include("test_cache.jl")
     end

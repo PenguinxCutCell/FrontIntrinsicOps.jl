@@ -67,9 +67,20 @@ function compute_geometry(mesh::CurveMesh{T}) :: CurveGeometry{T} where {T}
     end
 
     for vi in 1:nv
-        if isempty(incoming[vi]) || isempty(outgoing[vi])
-            # Boundary vertex: no curvature defined
-            vertex_normals[vi]   = SVector{2,T}(zero(T), one(T))
+        has_in = !isempty(incoming[vi])
+        has_out = !isempty(outgoing[vi])
+        if !has_in && !has_out
+            throw(ArgumentError("Curve vertex $vi is isolated and has no incident edges."))
+        elseif !has_in
+            # Open-curve start endpoint: use one-sided outgoing tangent.
+            t_out = edge_tangents[outgoing[vi][1]]
+            vertex_normals[vi] = SVector{2,T}(-t_out[2], t_out[1])
+            signed_curvature[vi] = zero(T)
+            continue
+        elseif !has_out
+            # Open-curve end endpoint: use one-sided incoming tangent.
+            t_in = edge_tangents[incoming[vi][1]]
+            vertex_normals[vi] = SVector{2,T}(-t_in[2], t_in[1])
             signed_curvature[vi] = zero(T)
             continue
         end
