@@ -7,6 +7,7 @@
 # Curve generators
 # ----------------
 # * `sample_circle(R, N)` – regular N-gon approximation of a circle.
+# * `sample_perturbed_circle(R, N; ϵ, mode, θ0)` – deterministic radial perturbation.
 #
 # Surface generators
 # ------------------
@@ -62,6 +63,42 @@ function sample_circle(R::T, N::Int) :: CurveMesh{T} where {T<:AbstractFloat}
     N >= 3 || error("sample_circle: N must be at least 3, got $N")
     pts   = [R * SVector{2,T}(cos(2T(π)*k/N), sin(2T(π)*k/N)) for k in 0:N-1]
     edges = [SVector{2,Int}(k, mod1(k+1, N)) for k in 1:N]
+    return CurveMesh{T}(pts, edges)
+end
+
+"""
+    sample_perturbed_circle(R::T, N::Int; ϵ::Real=0, mode::Int=4, θ0::Real=0) -> CurveMesh{T}
+
+Generate a closed polygonal approximation of a perturbed circle:
+
+`r(θ) = R * (1 + ϵ * cos(mode * (θ - θ0)))`, for `θ = 2πk/N`.
+
+`ϵ` controls perturbation amplitude, `mode` controls harmonic fold, and `θ0`
+rotates the perturbation pattern.
+"""
+function sample_perturbed_circle(
+    R::T,
+    N::Int;
+    ϵ::Real=0,
+    mode::Int=4,
+    θ0::Real=0,
+) :: CurveMesh{T} where {T<:AbstractFloat}
+    N >= 3 || throw(ArgumentError("sample_perturbed_circle: N must be at least 3, got $N"))
+    mode >= 0 || throw(ArgumentError("sample_perturbed_circle: mode must be >= 0, got $mode"))
+    R > zero(T) || throw(ArgumentError("sample_perturbed_circle: R must be positive, got $R"))
+
+    ϵT = convert(T, ϵ)
+    abs(ϵT) < one(T) || throw(ArgumentError("sample_perturbed_circle: require |ϵ| < 1 to keep positive radius, got ϵ=$ϵ"))
+
+    θ0T = convert(T, θ0)
+    modeT = convert(T, mode)
+    twoπ = 2T(π)
+    pts = [begin
+        θ = twoπ * k / N
+        r = R * (one(T) + ϵT * cos(modeT * (θ - θ0T)))
+        r * SVector{2,T}(cos(θ), sin(θ))
+    end for k in 0:N-1]
+    edges = [SVector{2,Int}(k, mod1(k + 1, N)) for k in 1:N]
     return CurveMesh{T}(pts, edges)
 end
 

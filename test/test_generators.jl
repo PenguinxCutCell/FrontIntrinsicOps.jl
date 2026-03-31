@@ -20,6 +20,32 @@ using StaticArrays
     end
 end
 
+@testset "sample_perturbed_circle" begin
+    R = 1.5
+    N = 64
+    ϵ = 0.12
+    mode = 4
+    θ0 = 0.2
+    mesh = sample_perturbed_circle(R, N; ϵ=ϵ, mode=mode, θ0=θ0)
+    @test length(mesh.points) == N
+    @test length(mesh.edges) == N
+    @test is_closed(mesh)
+    for (k, p) in enumerate(mesh.points)
+        θ = 2π * (k - 1) / N
+        r_expected = R * (1 + ϵ * cos(mode * (θ - θ0)))
+        @test abs(norm(p) - r_expected) < 1e-12
+    end
+
+    circle = sample_perturbed_circle(R, N; ϵ=0.0, mode=mode, θ0=θ0)
+    for p in circle.points
+        @test abs(norm(p) - R) < 1e-12
+    end
+
+    @test_throws ArgumentError sample_perturbed_circle(R, N; ϵ=1.0)
+    @test_throws ArgumentError sample_perturbed_circle(R, N; ϵ=-1.0)
+    @test_throws ArgumentError sample_perturbed_circle(R, N; mode=-1)
+end
+
 @testset "generate_uvsphere" begin
     R    = 2.0
     mesh = generate_uvsphere(R, 8, 16)

@@ -117,6 +117,7 @@ export
 
     # Mesh generators (v0.2)
     sample_circle,
+    sample_perturbed_circle,
     generate_uvsphere,
     generate_icosphere,
     generate_torus,
