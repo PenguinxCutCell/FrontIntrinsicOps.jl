@@ -40,13 +40,22 @@ end
 """
     hodge_star_1(mesh::CurveMesh{T}, geom::CurveGeometry{T}) -> SparseMatrixCSC{T,Int}
 
-Hodge ⋆₁ for a curve: diagonal matrix of primal edge lengths.
+Hodge ⋆₁ for a curve: diagonal matrix of inverse primal edge lengths.
+
+With the incidence convention used here (`d0*u = u_j - u_i`), the DEC scalar
+Laplacian is assembled as
+
+    L = ⋆₀⁻¹ d₀ᵀ ⋆₁ d₀
+
+and consistency with the 1D Laplace–Beltrami on arc-length parameterization
+requires `⋆₁(e) = 1 / |e|` (not `|e|`).
 """
 function hodge_star_1(
         mesh::CurveMesh{T},
         geom::CurveGeometry{T},
 ) :: SparseMatrixCSC{T,Int} where {T}
-    return spdiagm(0 => geom.edge_lengths)
+    inv_edge_lengths = [el > eps(T) ? one(T) / el : zero(T) for el in geom.edge_lengths]
+    return spdiagm(0 => inv_edge_lengths)
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
