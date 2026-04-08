@@ -179,6 +179,36 @@ Build with `alloc_diffusion_buffers(nv)` or `alloc_rd_buffers(nv)`.
 
 ---
 
+## FEEC types (v0.6)
+
+### `Whitney0Space`, `Whitney1Space`, `Whitney2Space`
+
+Lightweight descriptors for lowest-order Whitney spaces (vertex/edge/face DOFs).
+
+Fields:
+- `mesh`
+- `geom`
+- `ndofs`
+- `degree`
+- `element_type` (`:curve_edge` or `:surface_triangle`)
+
+### `WhitneyComplex`
+
+Explicit lowest-order complex container:
+
+```julia
+0 -> Λh0 --d0--> Λh1 --d1--> Λh2 -> 0
+```
+
+Fields:
+- `V0`, `V1`, `V2`
+- `d0`, `d1`
+- `M0`, `M1`, `M2`
+
+Built with `build_whitney_complex(mesh, geom)`.
+
+---
+
 ## See also
 
 - [Mesh types (math)](01_mesh_types.md)

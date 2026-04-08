@@ -73,6 +73,18 @@ include("test_helpers.jl")
     @testset "Interior product and Lie derivative" begin
         include("test_lie_derivative.jl")
     end
+    @testset "Whitney forms (FEEC)" begin
+        include("test_whitney_forms.jl")
+    end
+    @testset "FEEC projections" begin
+        include("test_feec_projections.jl")
+    end
+    @testset "de Rham sequence (FEEC)" begin
+        include("test_de_rham_sequence.jl")
+    end
+    @testset "FEEC assembly" begin
+        include("test_feec_assembly.jl")
+    end
     @testset "Transport limiters, open surfaces, caching, performance" begin
         include("test_v04_misc.jl")
     end

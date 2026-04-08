@@ -253,6 +253,28 @@ enforce_compatibility!(f, mesh, geom)
 
 ---
 
+## FEEC Whitney PDE helpers (v0.6)
+
+```julia
+build_whitney_complex(mesh, geom; mass=:consistent) -> WhitneyComplex
+build_de_rham_sequence(mesh, geom; family=:whitney) -> WhitneyComplex
+
+assemble_whitney_mass0(mesh, geom) -> SparseMatrixCSC
+assemble_whitney_mass1(mesh, geom) -> SparseMatrixCSC
+assemble_whitney_mass2(mesh, geom) -> SparseMatrixCSC
+
+assemble_whitney_stiffness0(mesh, geom) -> SparseMatrixCSC
+assemble_whitney_hodge_laplacian0(mesh, geom) -> SparseMatrixCSC
+assemble_whitney_hodge_laplacian1(mesh, geom) -> SparseMatrixCSC
+
+solve_mixed_hodge_laplacian0(mesh, geom, rhs; gauge=:mean_zero)
+solve_mixed_hodge_laplacian1(mesh, geom, rhs; gauge=:harmonic_orthogonal)
+```
+
+This layer is additive and does not replace the existing DEC PDE solvers.
+
+---
+
 ## See also
 
 - [Surface diffusion (math)](07_surface_diffusion.md)

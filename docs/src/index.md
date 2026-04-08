@@ -32,6 +32,11 @@ Detailed derivations and formulas for every module:
 | [Geodesics](geodesics.md) | Heat-method distance, shortest paths, intrinsic balls, geodesic FPS |
 | [Parallel transport](parallel_transport.md) | Face/vertex tangent frames, connection angle, holonomy |
 | [Exterior algebra extensions](exterior_algebra_extensions.md) | Wedge, interior product, Lie derivative (Cartan) |
+| [FEEC overview](feec_overview.md) | Lowest-order FEEC-compatible layer and Whitney complex |
+| [Continuum to discrete theory](theory_continuum_discrete_surface_pde.md) | Unified continuum geometry, DEC, FEEC, and surface-PDE formulation |
+| [Whitney forms](whitney_forms.md) | Whitney 0/1/2 basis and reconstruction conventions |
+| [Commuting projections](commuting_projections.md) | Canonical Π0/Π1/Π2 interpolation and commuting checks |
+| [Discrete de Rham sequence](de_rham_sequence.md) | Explicit sequence API, diagnostics, and subcomplex verification |
 | [High-resolution transport](13_highres_transport.md) | Minmod, van Leer, superbee, SSP-RK2 |
 | [Open surfaces and boundary conditions](14_open_surfaces.md) | Boundary detection, Dirichlet, Neumann |
 | [Caching and performance](15_caching.md) | `SurfacePDECache`, in-place buffers, zero-allocation kernels |

@@ -82,6 +82,11 @@ include("geodesics.jl")
 include("parallel_transport.jl")
 include("wedge.jl")
 include("lie_derivative.jl")
+include("feec_spaces.jl")
+include("whitney_forms.jl")
+include("feec_projections.jl")
+include("feec_assembly.jl")
+include("de_rham_sequence.jl")
 include("perf_utils.jl")
 # v0.4: New PDE capabilities
 include("reaction_diffusion.jl")
@@ -293,6 +298,50 @@ export
     interior_product,
     lie_derivative,
     cartan_lie_derivative,
+
+    # v0.6: Lowest-order FEEC / Whitney layer
+    AbstractFEECSpace,
+    Whitney0Space,
+    Whitney1Space,
+    Whitney2Space,
+    WhitneyComplex,
+    build_whitney_complex,
+    whitney0_basis_local,
+    whitney1_basis_local,
+    whitney2_basis_local,
+    eval_whitney0_local,
+    eval_whitney1_local,
+    eval_whitney2_local,
+    reconstruct_0form_face,
+    reconstruct_1form_face,
+    reconstruct_2form_face,
+    reconstruct_0form,
+    reconstruct_1form,
+    reconstruct_2form,
+    interpolate_0form,
+    interpolate_1form,
+    interpolate_2form,
+    Π0,
+    Π1,
+    Π2,
+    interpolate_exact_gradient,
+    interpolate_exact_flux_density,
+    projection_commutator_01,
+    projection_commutator_12,
+    build_de_rham_sequence,
+    de_rham_report,
+    verify_subcomplex,
+    verify_commuting_projection,
+    assemble_whitney_mass0,
+    assemble_whitney_mass1,
+    assemble_whitney_mass2,
+    assemble_whitney_stiffness0,
+    assemble_whitney_hodge_laplacian0,
+    assemble_whitney_hodge_laplacian1,
+    solve_mixed_hodge_laplacian0,
+    solve_mixed_hodge_laplacian1,
+    compare_dec_vs_whitney_mass,
+    compare_dec_vs_whitney_laplacian,
 
     exact_component_1form,
     coexact_component_1form,

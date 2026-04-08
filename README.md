@@ -152,6 +152,24 @@ Supported degree combinations are documented in `docs/src/exterior_algebra_exten
 
 ---
 
+## FEEC layer (lowest order)
+
+`FrontIntrinsicOps.jl` now also provides an additive lowest-order FEEC-compatible layer:
+
+- Whitney space descriptors: `Whitney0Space`, `Whitney1Space`, `Whitney2Space`
+- explicit complex builder: `build_whitney_complex`, `build_de_rham_sequence`
+- local basis/reconstruction: `whitney*_basis_local`, `reconstruct_*form*`
+- canonical interpolators: `interpolate_0form`, `interpolate_1form`, `interpolate_2form`
+  (aliases `Π0`, `Π1`, `Π2`)
+- commuting checks: `projection_commutator_01`, `projection_commutator_12`
+- consistent FEEC assembly: `assemble_whitney_mass*`, `assemble_whitney_stiffness0`,
+  `assemble_whitney_hodge_laplacian*`
+
+This FEEC layer does **not** replace the existing DEC workflows; it complements
+them for reconstruction and variational experiments.
+
+---
+
 ## Quick start
 
 ### Generate and analyse a sphere
