@@ -110,6 +110,48 @@ This 1-D support is intentionally minimal:
 
 ---
 
+## Topology-aware DEC
+
+For closed orientable surfaces, `FrontIntrinsicOps.jl` now exposes explicit topology-aware 1-form operators:
+
+- `betti_numbers`, `first_betti_number`
+- `cycle_basis`, `cohomology_basis_1`
+- `harmonic_basis`, `project_exact`, `project_coexact`, `project_harmonic`
+- `hodge_decomposition_full` with potentials and residual diagnostics
+
+The harmonic basis lives in edge-cochain space and is orthonormalized in the Hodge `⋆1` inner product.
+
+---
+
+## Geodesics and intrinsic transport
+
+Intrinsic distance tools are provided via a heat-method pipeline:
+
+- `geodesic_distance`, `geodesic_distance_to_vertex`, `geodesic_distance_to_vertices`
+- `shortest_path_vertices`, `geodesic_gradient`
+- `intrinsic_ball`, `farthest_point_sampling_geodesic`
+
+Discrete connection/transport tools are also available:
+
+- `face_tangent_frames`, `vertex_tangent_frames`
+- `connection_angle_across_edge`, `transport_matrix_across_edge`
+- `parallel_transport_face_vector`, `parallel_transport_along_face_path`
+- `parallel_transport_vertex_vector`, `holonomy_along_cycle`
+
+---
+
+## Exterior algebra additions
+
+Low-order practical DEC form products/derivatives are included:
+
+- `wedge`, `wedge0k`, `wedge11`
+- `interior_product`
+- `lie_derivative`, `cartan_lie_derivative`
+
+Supported degree combinations are documented in `docs/src/exterior_algebra_extensions.md`.
+
+---
+
 ## Quick start
 
 ### Generate and analyse a sphere
@@ -242,6 +284,19 @@ for _ in 2:100
                                                     factorization      = fac)
 end
 ```
+
+### Surface PDE with geodesics + Cartan transport (v0.5)
+
+The new geodesic and Lie-derivative operators can be used directly in a PDE
+time loop, for example:
+
+1. initialize from intrinsic geodesic distance,
+2. advect with `lie_derivative` (Cartan form),
+3. diffuse with existing implicit DEC diffusion.
+
+See:
+
+- `examples/surface_pde_intrinsic_tools.jl`
 
 ### Ambient signed-distance queries (v0.5)
 

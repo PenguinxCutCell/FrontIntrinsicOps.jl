@@ -58,6 +58,21 @@ include("test_helpers.jl")
     @testset "Hodge decomposition" begin
         include("test_hodge_decomposition.jl")
     end
+    @testset "Harmonic basis and cohomology" begin
+        include("test_harmonic_basis.jl")
+    end
+    @testset "Geodesics and shortest paths" begin
+        include("test_geodesics.jl")
+    end
+    @testset "Parallel transport and connection" begin
+        include("test_parallel_transport.jl")
+    end
+    @testset "Discrete wedge product" begin
+        include("test_wedge.jl")
+    end
+    @testset "Interior product and Lie derivative" begin
+        include("test_lie_derivative.jl")
+    end
     @testset "Transport limiters, open surfaces, caching, performance" begin
         include("test_v04_misc.jl")
     end

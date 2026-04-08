@@ -114,3 +114,26 @@ end
     @test abs(ips.exact_harmonic)   / norm2 < 0.05
     @test abs(ips.coexact_harmonic) / norm2 < 0.05
 end
+
+@testset "Hodge decomp full API: potentials and residual diagnostics" begin
+    mesh = generate_torus(2.0, 0.7, 18, 24)
+    geom = compute_geometry(mesh)
+    dec  = build_dec(mesh, geom)
+    ne   = length(build_topology(mesh).edges)
+
+    ω = zeros(Float64, ne)
+    ω .+= dec.d0 * [0.4 * p[3] + sin(p[1]) for p in mesh.points]
+    H = harmonic_basis(mesh, geom, dec)
+    @test size(H, 2) == 2
+    ω .+= 0.6 .* H[:, 1]
+
+    decomp = hodge_decomposition_full(ω, mesh, geom, dec; basis=H)
+
+    @test length(decomp.potentials.α) == length(mesh.points)
+    @test length(decomp.potentials.β) == length(mesh.faces)
+    @test norm(decomp.residual) / (norm(ω) + 1e-14) < 1e-8
+
+    r = harmonic_residuals(decomp.harmonic, mesh, geom, dec)
+    @test r.d_norm < 1e-6
+    @test r.δ_norm < 1e-6
+end

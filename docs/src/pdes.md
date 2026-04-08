@@ -261,3 +261,34 @@ enforce_compatibility!(f, mesh, geom)
 - [Hodge decomposition (math)](12_hodge_decomposition.md)
 - [Open surfaces (math)](14_open_surfaces.md)
 - [Caching (math)](15_caching.md)
+
+---
+
+## Using New Intrinsic Tools In PDE Loops
+
+Recent additions (`geodesic_distance`, `lie_derivative`, transport helpers) can
+be combined with existing solvers. A minimal pattern is:
+
+```julia
+mesh = generate_icosphere(1.0, 2)
+geom = compute_geometry(mesh)
+dec  = build_dec(mesh, geom)
+
+src = argmax([p[3] for p in mesh.points])
+d = geodesic_distance_to_vertex(mesh, geom, dec, src)
+u = exp.(-(d ./ 0.45).^2)
+
+# face tangent velocity field
+X = [tangential_project(SVector(-c[2], c[1], 0.0), geom.face_normals[fi]) for (fi, c) in enumerate([sum(mesh.points[f[k]] for k in 1:3)/3 for f in mesh.faces])]
+
+dt = 5e-3
+μ = 5e-3
+for _ in 1:80
+    u .-= dt .* lie_derivative(X, u, mesh, geom, dec)
+    u, _ = step_surface_diffusion_backward_euler(mesh, geom, dec, u, dt, μ)
+end
+```
+
+Full runnable script:
+
+- `examples/surface_pde_intrinsic_tools.jl`

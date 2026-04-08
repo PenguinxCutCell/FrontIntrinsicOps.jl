@@ -77,6 +77,11 @@ include("surface_diffusion.jl")
 include("surface_transport.jl")
 include("surface_advection_diffusion.jl")
 include("kforms.jl")
+include("harmonic_forms.jl")
+include("geodesics.jl")
+include("parallel_transport.jl")
+include("wedge.jl")
+include("lie_derivative.jl")
 include("perf_utils.jl")
 # v0.4: New PDE capabilities
 include("reaction_diffusion.jl")
@@ -246,6 +251,49 @@ export
     surface_rot_0form,
 
     # v0.4: Hodge decomposition
+    betti_numbers,
+    first_betti_number,
+    cycle_basis,
+    cohomology_basis_1,
+    harmonic_basis,
+    project_harmonic,
+    project_exact,
+    project_coexact,
+    hodge_decomposition_full,
+    is_closed_form,
+    is_coclosed_form,
+    harmonic_residuals,
+
+    # v0.5: Geodesic distance and shortest paths
+    geodesic_distance,
+    geodesic_distance_to_vertex,
+    geodesic_distance_to_vertices,
+    shortest_path_vertices,
+    shortest_path_points,
+    geodesic_gradient,
+    intrinsic_ball,
+    farthest_point_sampling_geodesic,
+
+    # v0.5: Parallel transport / discrete connection
+    vertex_tangent_frames,
+    face_tangent_frames,
+    transport_matrix_across_edge,
+    parallel_transport_face_vector,
+    parallel_transport_along_face_path,
+    parallel_transport_vertex_vector,
+    transport_edge_1form,
+    rotate_in_tangent_frame,
+    connection_angle_across_edge,
+    holonomy_along_cycle,
+
+    # v0.5: Exterior algebra additions
+    wedge,
+    wedge0k,
+    wedge11,
+    interior_product,
+    lie_derivative,
+    cartan_lie_derivative,
+
     exact_component_1form,
     coexact_component_1form,
     harmonic_component_1form,

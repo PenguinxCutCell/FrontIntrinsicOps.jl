@@ -28,6 +28,10 @@ Detailed derivations and formulas for every module:
 | [Reaction–diffusion IMEX](10_reaction_diffusion.md) | θ-scheme, Fisher–KPP, bistable |
 | [Tangential vector calculus](11_vector_calculus.md) | Projection, surface gradient/divergence, Whitney forms |
 | [Hodge decomposition](12_hodge_decomposition.md) | Helmholtz–Hodge, harmonic forms, genus-$g$ |
+| [Topology-aware DEC](topology_aware_dec.md) | Betti numbers, cycle basis, harmonic/cohomology operators |
+| [Geodesics](geodesics.md) | Heat-method distance, shortest paths, intrinsic balls, geodesic FPS |
+| [Parallel transport](parallel_transport.md) | Face/vertex tangent frames, connection angle, holonomy |
+| [Exterior algebra extensions](exterior_algebra_extensions.md) | Wedge, interior product, Lie derivative (Cartan) |
 | [High-resolution transport](13_highres_transport.md) | Minmod, van Leer, superbee, SSP-RK2 |
 | [Open surfaces and boundary conditions](14_open_surfaces.md) | Boundary detection, Dirichlet, Neumann |
 | [Caching and performance](15_caching.md) | `SurfacePDECache`, in-place buffers, zero-allocation kernels |
